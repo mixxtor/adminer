@@ -139,11 +139,12 @@ focus(document.getElementById('username'));
 		echo "<p class='links'>\n";
 		$start_pages = array(
 							'' => lang('Select database'),
-							'database' => lang('Create new database'),
+							'database' => lang('Create database'),
 							'privileges' => lang('Privileges'),
 							'processlist' => lang('Process list'),
 							'variables' => lang('Variables'),
-							'status' => lang('Status')
+							'status' => lang('Status'),
+							'replication' => lang('Replication'),
 							);
 		$any_selected = false;
 		foreach ($start_pages as $key => $val)
