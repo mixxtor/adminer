@@ -45,6 +45,10 @@ $translations = array(
 	'Variables' => 'Proměnné',
 	'Status' => 'Stav',
 	
+	'Replication' => 'Replikace',
+	'Master status' => 'Master status',
+	'Slave status' => 'Slave status',
+	
 	'SQL command' => 'SQL příkaz',
 	'%d query(s) executed OK.' => array('%d příkaz proběhl v pořádku.', '%d příkazy proběhly v pořádku.', '%d příkazů proběhlo v pořádku.'),
 	'Query executed OK, %d row(s) affected.' => array('Příkaz proběhl v pořádku, byl změněn %d záznam.', 'Příkaz proběhl v pořádku, byly změněny %d záznamy.', 'Příkaz proběhl v pořádku, bylo změněno %d záznamů.'),
@@ -84,7 +88,6 @@ $translations = array(
 	'Use' => 'Vybrat',
 	'Select database' => 'Vybrat databázi',
 	'Invalid database.' => 'Nesprávná databáze.',
-	'Create new database' => 'Vytvořit novou databázi',
 	'Database has been dropped.' => 'Databáze byla odstraněna.',
 	'Databases have been dropped.' => 'Databáze byly odstraněny.',
 	'Database has been created.' => 'Databáze byla vytvořena.',
@@ -184,13 +187,12 @@ $translations = array(
 	'Values' => 'Hodnoty',
 	
 	'View' => 'Pohled',
-	'Materialized View' => 'Materializovaný pohled',
+	'Materialized view' => 'Materializovaný pohled',
 	'View has been dropped.' => 'Pohled byl odstraněn.',
 	'View has been altered.' => 'Pohled byl změněn.',
 	'View has been created.' => 'Pohled byl vytvořen.',
 	'Alter view' => 'Pozměnit pohled',
 	'Create view' => 'Vytvořit pohled',
-	'Create materialized view' => 'Vytvořit materializovaný pohled',
 	
 	'Indexes' => 'Indexy',
 	'Indexes have been altered.' => 'Indexy byly změněny.',
@@ -337,4 +339,8 @@ $translations = array(
 	'Type has been dropped.' => 'Typ byl odstraněn.',
 	'Type has been created.' => 'Typ byl vytvořen.',
 	'Alter type' => 'Pozměnit typ',
+
+	'Replication' => null,
+	'Master status' => null,
+	'Slave status' => null,
 );

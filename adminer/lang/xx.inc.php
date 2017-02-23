@@ -45,6 +45,10 @@ $translations = array(
 	'Variables' => 'Xx',
 	'Status' => 'Xx',
 	
+	'Replication' => 'Xx',
+	'Master status' => 'Xx',
+	'Slave status' => 'Xx',
+	
 	'SQL command' => 'Xx',
 	'%d query(s) executed OK.' => array('Xx.', 'Xx.'),
 	'Query executed OK, %d row(s) affected.' => array('Xx.', 'Xx.'),
@@ -85,7 +89,6 @@ $translations = array(
 	'Use' => 'Xx',
 	'Select database' => 'Xx',
 	'Invalid database.' => 'Xx.',
-	'Create new database' => 'Xx',
 	'Database has been dropped.' => 'Xx.',
 	'Databases have been dropped.' => 'Xx.',
 	'Database has been created.' => 'Xx.',
@@ -185,13 +188,12 @@ $translations = array(
 	'Values' => 'Xx',
 	
 	'View' => 'Xx',
-	'Materialized View' => 'Xx',
+	'Materialized view' => 'Xx',
 	'View has been dropped.' => 'Xx.',
 	'View has been altered.' => 'Xx.',
 	'View has been created.' => 'Xx.',
 	'Alter view' => 'Xx',
 	'Create view' => 'Xx',
-	'Create materialized view' => 'Xx',
 	
 	'Indexes' => 'Xx',
 	'Indexes have been altered.' => 'Xx.',

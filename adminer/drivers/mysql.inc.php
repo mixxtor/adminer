@@ -532,10 +532,11 @@ if (!defined("DRIVER")) {
 	function indexes($table, $connection2 = null) {
 		$return = array();
 		foreach (get_rows("SHOW INDEX FROM " . table($table), $connection2) as $row) {
-			$return[$row["Key_name"]]["type"] = ($row["Key_name"] == "PRIMARY" ? "PRIMARY" : ($row["Index_type"] == "FULLTEXT" ? "FULLTEXT" : ($row["Non_unique"] ? "INDEX" : "UNIQUE")));
-			$return[$row["Key_name"]]["columns"][] = $row["Column_name"];
-			$return[$row["Key_name"]]["lengths"][] = $row["Sub_part"];
-			$return[$row["Key_name"]]["descs"][] = null;
+			$name = $row["Key_name"];
+			$return[$name]["type"] = ($name == "PRIMARY" ? "PRIMARY" : ($row["Index_type"] == "FULLTEXT" ? "FULLTEXT" : ($row["Non_unique"] ? ($row["Index_type"] == "SPATIAL" ? "SPATIAL" : "INDEX") : "UNIQUE")));
+			$return[$name]["columns"][] = $row["Column_name"];
+			$return[$name]["lengths"][] = ($row["Index_type"] == "SPATIAL" ? null : $row["Sub_part"]);
+			$return[$name]["descs"][] = null;
 		}
 		return $return;
 	}
@@ -1008,6 +1009,14 @@ if (!defined("DRIVER")) {
 		return get_key_vals("SHOW STATUS");
 	}
 
+	/** Get replication status of master or slave
+	* @param string
+	* @return array ($name => $value)
+	*/
+	function replication_status($type) {
+		return get_rows("SHOW $type STATUS");
+	}
+
 	/** Convert field in select and edit
 	* @param array one element from fields()
 	* @return string
@@ -1048,11 +1057,15 @@ if (!defined("DRIVER")) {
 	*/
 	function support($feature) {
 		global $connection;
-		return !preg_match("~scheme|sequence|type|view_trigger" . ($connection->server_info < 5.1 ? "|event|partitioning" . ($connection->server_info < 5 ? "|routine|trigger|view" : "") : "") . "~", $feature);
+		return !preg_match("~scheme|sequence|type|view_trigger|materializedview" . ($connection->server_info < 5.1 ? "|event|partitioning" . ($connection->server_info < 5 ? "|routine|trigger|view" : "") : "") . "~", $feature);
 	}
 
 	function kill_process($val) {
 		return queries("KILL " . number($val));
+	}
+
+	function connection_id(){
+		return "SELECT CONNECTION_ID()";
 	}
 
 	function max_connections() {
