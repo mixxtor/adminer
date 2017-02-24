@@ -1,5 +1,6 @@
 <?php
 page_header(lang('Replication'));
+$adminer->startLinks();
 
 echo "<h3>" . lang('Master status') . doc_link(array("sql" => "show-master-status.html")) . "</h3>\n";
 $master_replication_status = replication_status("MASTER");
