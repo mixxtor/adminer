@@ -95,7 +95,8 @@ class AdminerTableStructureAdvanced
 									var match;
 									var j = 0;
 									while ((match = table_data_fields_regexp.exec( table_rows[i] )) !== null)
-										table_data[j++].id = match[1];
+										if (match[1].indexOf("Table-") < 0)
+											table_data[j++].id = match[1];
 
 									var possible_urls_prefix = current_params.replace(/&amp;table=.*/, "");
 									var cols = table_rows[i].split(/<td[^>]*>/);
