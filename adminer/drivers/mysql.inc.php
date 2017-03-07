@@ -1025,7 +1025,7 @@ if (!defined("DRIVER")) {
 		if (preg_match("~binary~", $field["type"])) {
 			return "HEX(" . idf_escape($field["field"]) . ")";
 		}
-		if ($field["type"] == "bit") {
+		if (($field["type"] == "bit") && ($field["length"] > 1)) {
 			return "BIN(" . idf_escape($field["field"]) . " + 0)"; // + 0 is required outside MySQLnd
 		}
 		if (preg_match("~geometry|point|linestring|polygon~", $field["type"])) {
