@@ -477,18 +477,12 @@ function convert_fields($columns, $fields, $select = array()) {
 */
 function cookie($name, $value, $lifetime = 2592000) { // 2592000 - 30 days
 	global $HTTPS;
-	$params = array(
-		$name,
-		(preg_match("~\n~", $value) ? "" : $value), // HTTP Response Splitting protection in PHP < 5.1.2
-		($lifetime ? time() + $lifetime : 0),
-		preg_replace('~\\?.*~', '', $_SERVER["REQUEST_URI"]),
-		"",
-		$HTTPS
+	return header("Set-Cookie: $name=" . urlencode($value)
+		. ($lifetime ? "; expires=" . gmdate("D, d M Y H:i:s", time() + $lifetime) . " GMT" : "")
+		. "; path=" . preg_replace('~\\?.*~', '', $_SERVER["REQUEST_URI"])
+		. ($HTTPS ? "; secure" : "")
+		. "; HttpOnly; SameSite=lax"
 	);
-	if (version_compare(PHP_VERSION, '5.2.0') >= 0) {
-		$params[] = true; // HttpOnly
-	}
-	return call_user_func_array('setcookie', $params);
 }
 
 /** Restart stopped session
@@ -1171,7 +1165,7 @@ function select_value($val, $link, $field, $text_length) {
 			$link = "mailto:$val";
 		}
 		if ($protocol = is_url($val)) {
-			$link = (($protocol == "http" && $HTTPS) || preg_match('~WebKit~i', $_SERVER["HTTP_USER_AGENT"]) // WebKit supports noreferrer since 2009
+			$link = (($protocol == "http" && $HTTPS) || preg_match('~WebKit|Firefox~i', $_SERVER["HTTP_USER_AGENT"]) // WebKit supports noreferrer since 2009, Firefox since version 38
 				? $val // HTTP links from HTTPS pages don't receive Referer automatically
 				: "https://www.adminer.org/redirect/?url=" . urlencode($val) // intermediate page to hide Referer
 			);

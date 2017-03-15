@@ -110,7 +110,7 @@ focus(document.getElementById('username'));
 	function login($login, $password) {
 		global $jush;
 		if ($jush == "sqlite") {
-			return lang('Implement %s method to use SQLite.', 'login()');
+			return lang('<a href="https://www.adminer.org/en/extension/" target="_blank">Implement</a> %s method to use SQLite.', '<code>login()</code>');
 		}
 		return true;
 	}
@@ -271,7 +271,10 @@ focus(document.getElementById('username'));
 	function selectVal($val, $link, $field, $original) {
 		$return = ($val === null ? "<i>NULL</i>" : (preg_match("~char|binary~", $field["type"]) && !preg_match("~var~", $field["type"]) ? "<code>$val</code>" : $val));
 		if (preg_match('~blob|bytea|raw|file~', $field["type"]) && !is_utf8($val)) {
-			$return = lang('%d byte(s)', strlen($original));
+			$return = "<i>" . lang('%d byte(s)', strlen($original)) . "</i>";
+		}
+		if (preg_match('~json~', $field["type"])) {
+			$return = "<code class='jush-js'>$return</code>";
 		}
 		return ($link ? "<a href='" . h($link) . "'" . (is_url($link) ? " rel='noreferrer'" : "") . ">$return</a>" : $return);
 	}
@@ -893,11 +896,14 @@ focus(document.getElementById('username'));
 				$connection->select_db(DB);
 				$tables = table_status('', true);
 			}
-			if (support("sql")) {
-				?>
+			?>
 <script type="text/javascript" src="../externals/jush/modules/jush.js"></script>
 <script type="text/javascript" src="../externals/jush/modules/jush-textarea.js"></script>
 <script type="text/javascript" src="../externals/jush/modules/jush-txt.js"></script>
+<script type="text/javascript" src="../externals/jush/modules/jush-js.js"></script>
+<?php
+			if (support("sql")) {
+				?>
 <script type="text/javascript" src="../externals/jush/modules/jush-<?php echo $jush; ?>.js"></script>
 <script type="text/javascript">
 <?php

@@ -303,12 +303,16 @@ if (!defined("DRIVER")) {
 	* @return mixed Min_DB or string for error
 	*/
 	function connect() {
-		global $adminer;
+		global $adminer, $types, $structured_types;
 		$connection = new Min_DB;
 		$credentials = $adminer->credentials();
 		if ($connection->connect($credentials[0], $credentials[1], $credentials[2])) {
 			$connection->set_charset(charset($connection)); // available in MySQLi since PHP 5.0.5
 			$connection->query("SET sql_quote_show_create = 1, autocommit = 1");
+			if (version_compare($connection->server_info, '5.7.8') >= 0) {
+				$structured_types[lang('Strings')][] = "json";
+				$types["json"] = 4294967295;
+			}
 			return $connection;
 		}
 		$return = $connection->error;
@@ -434,7 +438,7 @@ if (!defined("DRIVER")) {
 		global $connection;
 		$return = array();
 		foreach (get_rows($fast && $connection->server_info >= 5
-			? "SELECT TABLE_NAME AS Name, Engine, TABLE_COMMENT AS Comment FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() " . ($name != "" ? "AND TABLE_NAME = " . q($name) : "ORDER BY Name")
+			? "SELECT TABLE_NAME AS Name, ENGINE AS Engine, TABLE_COMMENT AS Comment FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() " . ($name != "" ? "AND TABLE_NAME = " . q($name) : "ORDER BY Name")
 			: "SHOW TABLE STATUS" . ($name != "" ? " LIKE " . q(addcslashes($name, "%_\\")) : "")
 		) as $row) {
 			if ($row["Engine"] == "InnoDB") {
