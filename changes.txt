@@ -30,14 +30,14 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.3.0-dev:
-Add accessibility labels
+Adminer 4.3.0 (released 2017-03-15):
 Make maxlength in edit fields a soft limit
+Add accessibility labels
 Add Cache-Control: immutable to static files
-MySQL: Add dedicated view for replication status
-MySQL: Support spatial indexes
 MySQL: Support MySQL 8
 MySQL: Support JSON data type
+MySQL: Add dedicated view for replication status
+MySQL: Support spatial indexes
 PostgreSQL: Export
 PostgreSQL: Don't treat partial indexes as unique
 MS SQL: Support pdo_dblib
