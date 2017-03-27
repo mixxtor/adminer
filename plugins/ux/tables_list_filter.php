@@ -52,6 +52,7 @@ class AdminerTablesListFilter
 					var text = tables_links[i].innerText || tables_links[i].textContent;
 					if (text.indexOf(this.value) == -1)
 					{
+						// hide each link, because old version of adminer has just links with <br> as separator
 						if (tables_links[i].className.split(reString).indexOf("hidden") == -1)
 						{
 							tables_links[i-1].className += " hidden";	// icon

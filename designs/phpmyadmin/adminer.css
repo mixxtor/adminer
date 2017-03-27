@@ -4,8 +4,7 @@ body {
 	background: #f5f5f5;
 	/*color: #333;*/
 	color: black;
-/*	font: 13px/18px Helvetica, Arial, sans-serif;*/
-	font: 13px/18px sans-serif;
+	font: 13px/18px Arial, Helvetica, sans-serif;
 }
 
 /* generic */
@@ -78,7 +77,7 @@ input, select, textarea {
 	border: 1px solid #CCC;
 
 	color: #555;
-	font: 13px Helvetica,Arial,sans-serif;
+	font: 13px Arial,Helvetica,sans-serif;
 	padding: 3px;
 }
 
@@ -289,7 +288,8 @@ table code {
 	padding: 0 0 0 20px;
 	position: fixed;
 	top: 0;
-	left: 274px;
+/*	left: 300px;*/
+	left: 284px; /* as breadcrumb */
 	width: 100%;
 	height: 40px;
 }
@@ -301,7 +301,13 @@ table code {
 	font-size:15px;
 	line-height:20px;
 	padding-left: 10px;
-	/*	border-bottom:1px solid #9f9f9f;*/
+}
+
+#content > h2 a
+{
+	line-height: 1em;
+	margin-left: 10px;
+	font-family:Arial;
 }
 
 #content > .links
@@ -327,6 +333,13 @@ table code {
 	clear: left;
 }
 
+
+#content pre[id^='sql'] a
+{
+	font-family:Arial;
+}
+
+
 #lang {
 	background: #333;
 	color: #FFF;
@@ -343,11 +356,6 @@ table code {
 	border: none;
 	background: #5F5F5F;
 	color: white;
-}
-
-BODY.single-lang #menu {
-	top: 0;
-	z-index: 1;
 }
 
 #menu {
@@ -377,7 +385,7 @@ BODY.single-lang #menu {
 /*	color: #FFF;*/
 }
 
-#menu p {
+#menu p, #tables {
 	border: none;
 	margin: 0 0 4px;
 	padding: 0 0 4px;
@@ -394,12 +402,12 @@ BODY.single-lang #menu {
 	color: #FFF;
 	line-height: 40px;
 	margin: 0;
-	padding:0 0 0 10px;
+	padding:0;
 	position: fixed;
 	top: 0;
 /*	left: 300px;*/
 	left: 0px;
-	margin-left:274px;
+	margin-left:284px;
 	width: 100%;
 	height: 40px;
 	z-index: 10;
@@ -414,6 +422,20 @@ BODY.single-lang #menu {
 	border-color: #FF9;
 	color: #FF9;
 }
+
+
+BODY.single-lang #menu {
+ top: 0;
+ z-index: 10;
+}
+
+BODY.single-lang #breadcrumb
+{
+	margin-left:0px;
+	padding-left:284px;
+}
+
+
 
 #schema .table {
 	background: #F3F3F3;
@@ -487,7 +509,13 @@ select[name="db"] option {
 	padding-left: 18px;
 }
 
-#menu p a.select {
+#menu #tables a.hidden
+{
+	display:none !important;
+}
+
+/*#menu p a.select {*/
+#menu #tables a.select {
 	display: inline-block;
 	margin-right: 0;
 	overflow: hidden;
@@ -497,14 +525,16 @@ select[name="db"] option {
 	height: 16px;
 }
 
-#menu p a.select:before {
+/*#menu p a.select:before {*/
+#menu a.select:before {
 	content: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHISURBVDjLpVPNK0RRFP+9D98syMwUspHkm9I0YkFZWBFKkZ0s7a3Ewh+ilChK7FgoZCJFKYlYKB8zk2+Z5t0P577He29kQU7dd+6575zf+d1zztWklPiPmOozt/U4SThjXIoyIQS4AJjSXO0lGGlvcXAm6Vzsz4xUhm0AIeX4QLig+C+ZpxbOG1wGhGYHr1zMUmZGWRgs0ha3PE1nX/8mWmdgWTzLB+DUYbhm9FfZ35IEyrhXA3VXJfPbsV8B9LQUIeUHYJ8ASobag1jcucNgW8g9W4reYSDi2YnnZDoDiwCokDANct6NwTB0LEdj0HRA/wxa2SN25JNBEdWluUhZ366gqmAaGvrCAXKOozccTGPgt8+vn8GYSGcgyTYp3dpBnBg42nbQPRBTo5bTvqYkmxL6AQhNTWQGBXY3B7BxlEBXozcW64dxRKoKUZBju+P06gl5WaaviMJBM3TNDlbypemIZgHYOnlwASsCmW7nHADGnBoQ3c76YmweJ9BR5zFYjsbRHwm4tmJg6PhWA7pCXXk+bu7fURHKweXtq/sWaksz7SC/CCGFrwtyZ3r+rCnFRZ7qr1qc6mLZj4f9OEyPL8lVpbX/PucPv5QPKHB1TdEAAAAASUVORK5CYII=");
 	padding-right: 5px;
 	display: inline-block;
 	margin-top: 2px;
 }
 
-#menu p a[href*="&table="], #menu p a[href*="&view="] {
+/*#menu p a[href*="&table="], #menu p a[href*="&view="] {*/
+#menu #tables a[href*="&table="], #menu #tables a[href*="&view="] {
 	display: inline-block;
 	text-decoration: none;
 }
@@ -651,8 +681,10 @@ input[name="delete"]:hover, input[name="drop"]:hover {
 }
 
 #logout {
+
 	position: relative;
 	z-index: 11;
+
 	background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJHSURBVDjLlZPNi81hFMc/z7137p1mTCFvNZfGSzLIWNjZKRvFRoqNhRCSYm8xS3+AxRRZ2JAFJWJHSQqTQkbEzYwIM+6Yid/znJfH4prLXShOnb6r8/nWOd8Tcs78bz0/f+KMu50y05nK/wy+uHDylbutqS5extvGcxaWqtoGDA8PZ3dnrs2srQc2Zko41UXLmLdyDW5OfvsUkUgbYGbU63UAQggdmvMzFmzZCgTi7CQmkZwdEaX0JwDgTnGbTCaE0G4zw80omhPI92lcEtkNkdgJCCHwJX7mZvNaB0A14SaYJlwTrpHsTkoFlV1nt2c3x5YYo1/vM9A/gKpxdfwyu/v3teCayKq4JEwT5EB2R6WgYmrs2bYbcUNNUVfEhIfFYy69uci+1fuRX84mkawFSxd/4nVWUopUVIykwlQxRTJBTIDA4Pp1jBZPuNW4wUAPmCqWIn29X1k4f5Ku8g9mpKCkakRLVEs1auVuauVuyqHMo8ejNCe+sWPVTkQKXCMmkeZUmUZjETF1tc6ooly+fgUVw9So1/tRN6YnZji46QghBFKKuAouERNhMlbAHZFE6e7pB+He8MMw+GGI4xtOMf1+lsl3TQ4NHf19BSlaO1DB9BfMHdX0O0iqSgiBbJkjm491hClJbA1LxCURgpPzXwAHhg63necAIi3XngXLcRU0fof8ETMljIyM5LGxMcbHxzvy/6fuXdWgt6+PWncv1e4euqo1ZmabvHs5+jn8yzufO7hiiZmuNpNBM13rbvVSpbrXJE7/BMkHtU9jFIC/AAAAAElFTkSuQmCC") no-repeat scroll left center;
 	border: none;
 	cursor: pointer;
@@ -683,9 +715,6 @@ input[name="delete"]:hover, input[name="drop"]:hover {
 	text-decoration: none;
 /*	color:black; */
 }
-
-
-
 
 table {
     border-spacing: 2px;

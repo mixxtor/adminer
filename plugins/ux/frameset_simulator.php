@@ -21,6 +21,26 @@ class AdminerFramesetSimulator
 	{
 ?>
 		<script>
+<?php
+		if ($this->DETECT_SINGLE_LANGUAGE_MODE && empty($GLOBALS["langs"]))
+		{
+?>
+			// detect single lang version for possibility to move menu to top (here it work faster => less visual modifications)
+			(function()
+			{
+				var single_lang_timer = window.setInterval(function()
+				{
+					if (document.body)
+					{
+						window.clearInterval(single_lang_timer);
+						document.body.className += " single-lang";
+					}
+				}, 10);
+			})();
+<?php
+		}
+?>
+
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			// frameset scrolls simulator (better when this plugin is first)
@@ -46,17 +66,6 @@ class AdminerFramesetSimulator
 				}
 				return arr;
 			};
-
-			// detect single lang version for possibility to move menu to top
-<?php
-			if ($this->DETECT_SINGLE_LANGUAGE_MODE)
-			{
-?>
-				if (!document.getElementById("lang"))
-					document.body.className += " single-lang";
-<?php
-			}
-?>
 
 			// change menu scrolls
 			var restoredMenuScrolls;
@@ -217,18 +226,47 @@ class AdminerFramesetSimulator
 									w: menu.offsetWidth - parseInt(GetStyleOfElement(menu, "padding-left")) - parseInt(GetStyleOfElement(menu, "padding-right")) - parseInt(GetStyleOfElement(menu, "border-left-width")) - parseInt(GetStyleOfElement(menu, "border-right-width")),
 									l: resize_bar.style.left
 									};
+			// in some cases we have to move breadcrumb
+			if (!(GetStyleOfElement(menu, "top")-0) && (GetStyleOfElement(breadcrumb, "position") == "fixed"))
+			{
+				var bcMarginLeft = GetStyleOfElement(breadcrumb, "margin-left");
+				var bcPaddingLeft = GetStyleOfElement(breadcrumb, "padding-left");
+				if (Math.abs(bcMarginLeft - default_values.w) < Math.abs(bcPaddingLeft - default_values.w))
+					default_values.bcML = bcMarginLeft;
+				else
+					default_values.bcPL = bcPaddingLeft;
+			}
 
 			resize_bar.addEventListener("dblclick", function(event)
 			{
 				menu.style.width = default_values.w + "px";
 				content_scroll_box.style.left = menu.offsetWidth + "px";
 				resize_bar.style.left = default_values.l;
+
+				if (default_values.bcML)
+					breadcrumb.style.marginLeft = default_values.bcML;
+				else if (default_values.bcPL)
+					breadcrumb.style.paddingLeft = default_values.bcPL;
+
 				if (window.sessionStorage)
-					sessionStorage.menuSize = menu.style.width;
+				{
+//					sessionStorage.menuSize = menu.style.width;
+					delete sessionStorage.menuSize;
+					delete sessionStorage.bcML;
+					delete sessionStorage.bcPL;
+				}
 			});
 			resize_bar.addEventListener("mousedown", function(event)
 			{
-				resize_bar["myResizeOffset"] = { x:event.pageX, w:menu.offsetWidth - parseInt(GetStyleOfElement(menu, "padding-left")) - parseInt(GetStyleOfElement(menu, "padding-right")) - parseInt(GetStyleOfElement(menu, "border-left-width")) - parseInt(GetStyleOfElement(menu, "border-right-width")) };
+				resize_bar["myResizeOffset"] = {
+												x:event.pageX,
+												w:menu.offsetWidth - parseInt(GetStyleOfElement(menu, "padding-left")) - parseInt(GetStyleOfElement(menu, "padding-right")) - parseInt(GetStyleOfElement(menu, "border-left-width")) - parseInt(GetStyleOfElement(menu, "border-right-width"))
+												};
+				if (default_values.bcML)
+					resize_bar["myResizeOffset"].bcML = parseInt(GetStyleOfElement(breadcrumb, "margin-left"));
+				else if (default_values.bcPL)
+					resize_bar["myResizeOffset"].bcPL = parseInt(GetStyleOfElement(breadcrumb, "padding-left"));
+
 				document.body.className += " ux-unselectable";
 			});
 			document.addEventListener("mouseup", function(event)
@@ -236,7 +274,13 @@ class AdminerFramesetSimulator
 				if (resize_bar["myResizeOffset"])
 				{
 					if (window.sessionStorage)
+					{
 						sessionStorage.menuSize = menu.style.width;
+						if (default_values.bcML)
+							sessionStorage.bcML = GetStyleOfElement(breadcrumb, "margin-left");
+						else if (default_values.bcPL)
+							sessionStorage.bcPL = GetStyleOfElement(breadcrumb, "padding-left");
+					}
 					resize_bar["myResizeOffset"] = null;
 					document.body.className = document.body.className.replace(/ux-unselectable/g, "");
 				}
@@ -254,6 +298,11 @@ class AdminerFramesetSimulator
 						resize_bar.style.left = (parseInt(content_scroll_box.style.left) - parseInt(menu_right_border[1])) + "px";
 					else
 						resize_bar.style.left = content_scroll_box.style.left;
+
+					if (resizeOffset.bcML)
+						breadcrumb.style.marginLeft = resizeOffset.bcML - (resizeOffset.x - event.pageX) + "px";
+					else if (resizeOffset.bcPL)
+						breadcrumb.style.paddingLeft = resizeOffset.bcPL - (resizeOffset.x - event.pageX) + "px";
 				}
 			});
 			menu.parentNode.appendChild(resize_bar);
@@ -270,6 +319,11 @@ class AdminerFramesetSimulator
 						resize_bar.style.left = (parseInt(content_scroll_box.style.left) - parseInt(menu_right_border[1])) + "px";
 					else
 						resize_bar.style.left = content_scroll_box.style.left;
+
+					if (sessionStorage.bcML)
+						breadcrumb.style.marginLeft = sessionStorage.bcML;
+					else if (sessionStorage.bcPL)
+						breadcrumb.style.paddingLeft = sessionStorage.bcPL;
 				}
 
 

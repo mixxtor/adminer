@@ -85,8 +85,7 @@ input, select, textarea {
 }
 
 input[disabled=true], select[disabled=true], textarea[disabled=true],
-input:disabled, select:disabled, textarea:disabled
-{
+input:disabled, select:disabled, textarea:disabled {
 	opacity: 0.5;
 }
 
@@ -231,7 +230,7 @@ table code {
 }
 
 .hidden {
-	display: none;
+	display: none !important;
 }
 
 .error, .message {
@@ -343,7 +342,7 @@ BODY.single-lang #menu {
 #menu #tables a.select { float: left; }
 #menu #tables br { clear: both; }
 
-#menu p {
+#menu p, #tables {
 	border: none;
 	margin: 0 0 4px;
 	padding: 0 0 4px;
@@ -362,8 +361,8 @@ BODY.single-lang #menu {
 	padding: 0 0 0 20px;
 	position: fixed;
 	top: 0;
-	left: 10px;
-	padding-left: 300px;	/* single language version fix */
+	left: 0;
+	padding-left: 310px;	/* single language version fix */
 	width: 100%;
 	height: 40px;
 }

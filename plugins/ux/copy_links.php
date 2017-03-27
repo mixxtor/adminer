@@ -14,6 +14,9 @@ class AdminerCopyLinks
 		<script>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
+			if ((typeof opera == "object") && opera.version)	// Opera classic did not support manual copy events
+				return false;
+
 			var PutTextInCopyBuffer = function(copy_text, sender)
 			{
 				var success_copy = false;
@@ -95,7 +98,7 @@ class AdminerCopyLinks
 			if (header_els.length && (header_els[0].innerHTML.indexOf(":") > 0))
 			{
 				var copy_link_table = document.createElement("A");
-				copy_link_table.style = "font-size: 0.3em; cursor:pointer;";
+				copy_link_table.style = "font-size: 10px; cursor:pointer;";
 				copy_link_table.appendChild( document.createTextNode("[copy]")  );
 				copy_link_table.addEventListener("click", function(event)
 				{
