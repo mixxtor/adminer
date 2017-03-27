@@ -27,7 +27,8 @@
 							"table_sort_desc_before_title"	=> new AdminerTableSortDescBeforeTitle(),
 							// Tools
 							"db_diagnostics_queries"		=> new AdminerDbDiagnosticsQueries(),
-							"sql_command_transaction"		=> new AdminerSqlCommandTransaction()
+							"sql_command_transaction"		=> new AdminerSqlCommandTransaction(),
+							"copy_links"					=> new AdminerCopyLinks
 							);
 	$_php_my_admin_plugins = $php_my_admin_plugins;		// user friendly variable
 ?>
