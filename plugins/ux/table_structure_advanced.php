@@ -274,6 +274,15 @@ class AdminerTableStructureAdvanced
 				{
 				};
 
+				window.myConfirmRemoveIdx = function(sender, key_name)
+				{
+					if ((key_name.indexOf("indexes") === 0) && !confirm("Are you sure?"))
+						return true;
+
+					if (editingRemoveRow(sender, key_name))
+						sender.form.submit();
+				};
+
 
 				// add table fields to query textarea
 				var current_location = document.location.href;
@@ -417,7 +426,7 @@ class AdminerTableStructureAdvanced
 										indexes_rows[j].cells[0].appendChild(new_el);
 
 										new_cell = document.createElement("TD");
-										new_cell.innerHTML = index_controls.replace("editingRemoveRow", "myConfirmRemoveRow");
+										new_cell.innerHTML = index_controls.replace("editingRemoveRow", "myConfirmRemoveIdx");
 										indexes_rows[j].appendChild(new_cell);
 										break;
 									}
