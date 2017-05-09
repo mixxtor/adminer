@@ -77,8 +77,18 @@ class AdminerTableEditByFields
 						evt.target.focus();
 				}
 
+				var auto_increment_selected = null;
 				uxEditableFieldBeforeAction = function(sender)
 				{
+					if (sender.type == "change")	// check on event
+					{
+						sender = this;
+						if (sender.name == "auto_increment_col")
+						{
+							uxEditableFieldBeforeAction(auto_increment_selected);
+							auto_increment_selected = sender;
+						}
+					}
 					funcEditTableField(sender);
 					return true;
 				}
@@ -121,6 +131,13 @@ class AdminerTableEditByFields
 										inputs[j].disabled = true;
 									else if (inputs[j].value == "")
 										inputs[j].focus();
+
+									if (inputs[j].name == "auto_increment_col")
+									{
+										inputs[j].addEventListener("change", uxEditableFieldBeforeAction);
+										if (inputs[j].checked)
+											auto_increment_selected = inputs[j];
+									}
 								}
 
 								if (inputs[j].title === "")
@@ -139,6 +156,16 @@ class AdminerTableEditByFields
 							inputs_cnt = inputs.length;
 							for (j=0; j<inputs_cnt; j++)
 								inputs[j].disabled = true;
+						}
+					}
+					else if (curr_row.parentNode.tagName == "THEAD")
+					{
+						inputs = curr_row.getElementsByTagName("INPUT");
+						if (inputs.length && (inputs[0].name == "auto_increment_col"))
+						{
+							inputs[0].addEventListener("change", uxEditableFieldBeforeAction);
+							if (inputs[0].checked)
+								auto_increment_selected = inputs[0];
 						}
 					}
 
