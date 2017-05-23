@@ -144,7 +144,6 @@ focus(document.getElementById('username'));
 							'processlist' => lang('Process list'),
 							'variables' => lang('Variables'),
 							'status' => lang('Status'),
-							'replication' => lang('Replication'),
 							);
 		$any_selected = false;
 		foreach ($start_pages as $key => $val)

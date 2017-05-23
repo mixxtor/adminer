@@ -30,6 +30,10 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
+Adminer 4.3.2-dev:
+MySQL: Remove dedicated view for replication status (added in 4.3.0)
+PostgreSQL: Sort table names (regression from 4.3.1)
+
 Adminer 4.3.1 (released 2017-04-14):
 Fix permanent login after logout (bug #539)
 Fix SQL command autofocus (regression from 4.0.0)
