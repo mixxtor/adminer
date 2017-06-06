@@ -322,6 +322,12 @@ focus(document.getElementById('username'));
 				;
 			}
 			echo "<tr title='" . h($name) . "'><th>$index[type]<td>" . implode(", ", $print) . "\n";
+			if (isset($index["cardinality"])) {
+				echo "<td>";
+				if (!empty($index["index_type"]) && ($index["index_type"] != $index["type"]))
+					echo $index["index_type"] . ", ";
+				echo $index["cardinality"] . "\n";
+			}
 		}
 		echo "</table>\n";
 	}

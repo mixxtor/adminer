@@ -538,6 +538,8 @@ if (!defined("DRIVER")) {
 		foreach (get_rows("SHOW INDEX FROM " . table($table), $connection2) as $row) {
 			$name = $row["Key_name"];
 			$return[$name]["type"] = ($name == "PRIMARY" ? "PRIMARY" : ($row["Index_type"] == "FULLTEXT" ? "FULLTEXT" : ($row["Non_unique"] ? ($row["Index_type"] == "SPATIAL" ? "SPATIAL" : "INDEX") : "UNIQUE")));
+			$return[$name]["index_type"] = $row["Index_type"];
+			$return[$name]["cardinality"] = $row["Cardinality"];
 			$return[$name]["columns"][] = $row["Column_name"];
 			$return[$name]["lengths"][] = ($row["Index_type"] == "SPATIAL" ? null : $row["Sub_part"]);
 			$return[$name]["descs"][] = null;
