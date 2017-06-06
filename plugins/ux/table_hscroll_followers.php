@@ -63,9 +63,9 @@ class AdminerTableHScrollFollowers
 					{
 						var scrollLeft = scroll_box.scrollX || scroll_box.scrollLeft;
 						var i, el, directions = {
-												down_pages:		{src_obj:result_table, shift_attr:"nextSibling"},
-												up_pages:		{src_obj:result_table, shift_attr:"previousSibling"},
-												up_elements:	{src_obj:result_table.parentNode, shift_attr:"previousSibling"}
+													down_pages:		{src_obj:result_table, shift_attr:"nextSibling"},
+													up_pages:		{src_obj:result_table, shift_attr:"previousSibling"},
+													up_elements:	{src_obj:result_table.parentNode, shift_attr:"previousSibling"}
 												};
 						for (i in directions)
 						{
@@ -77,7 +77,8 @@ class AdminerTableHScrollFollowers
 										|| (i == "up_elements")
 										)
 									&& (el.id != "breadcrumb")
-									&& (!el.getElementsByTagName("TABLE").length)		// forms with EXPLAIN table do not scroll
+									&& (el.tagName != "TABLE")							// result of second+ queries
+//									&& (!el.getElementsByTagName("TABLE").length)		// forms with EXPLAIN table do not scroll
 									)
 								{
 									if (!el.myOriginalPosition)
