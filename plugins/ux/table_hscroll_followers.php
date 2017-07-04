@@ -78,7 +78,7 @@ class AdminerTableHScrollFollowers
 										)
 									&& (el.id != "breadcrumb")
 									&& (el.tagName != "TABLE")							// result of second+ queries
-//									&& (!el.getElementsByTagName("TABLE").length)		// forms with EXPLAIN table do not scroll
+									&& (!el.getElementsByTagName("TABLE").length)		// forms with EXPLAIN table do not scroll
 									)
 								{
 									if (!el.myOriginalPosition)

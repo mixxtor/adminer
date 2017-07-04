@@ -30,7 +30,7 @@ if ($_POST && !$error && !isset($_GET["select"])) {
 		);
 
 	} else {
-		$update_few_items = (count($_POST["check"]) > 1);
+		$update_few_items = is_array($_POST["check"]) ? (count($_POST["check"]) > 1) : false;
 		if (!$update_few_items) {
 			$set = array();
 			foreach ($fields as $name => $field) {
