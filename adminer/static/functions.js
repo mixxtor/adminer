@@ -177,7 +177,7 @@ function formChecked(el, name) {
 function tableClick(event, click) {
 	click = (click || !window.getSelection || getSelection().isCollapsed);
 	var el = getTarget(event);
-	while (!isTag(el, 'tr')) {
+	while (!isTag(el, 'tr') && !isTag(el, 'th')) {
 		if (isTag(el, 'table|a|input|textarea')) {
 			if (el.type != 'checkbox') {
 				return;
@@ -190,12 +190,15 @@ function tableClick(event, click) {
 			return;
 		}
 	}
-	el = el.firstChild.firstChild;
-	if (click) {
-		el.checked = !el.checked;
-		el.onclick && el.onclick();
+
+	if (isTag(el, 'tr')) {
+		el = el.firstChild.firstChild;
+		if (click) {
+			el.checked = !el.checked;
+			el.onclick && el.onclick();
+		}
+		trCheck(el);
 	}
-	trCheck(el);
 }
 
 var lastChecked;
