@@ -937,6 +937,7 @@ function input($field, $value, $function, $field_group_idx = null) {
 				. "$attrs>"
 			;
 		}
+		echo $adminer->editHint($_GET["edit"], $field, $value);
 	}
 }
 
