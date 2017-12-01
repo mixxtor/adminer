@@ -144,14 +144,23 @@ focus(document.getElementById('username'));
 							'processlist' => lang('Process list'),
 							'variables' => lang('Variables'),
 							'status' => lang('Status'),
+							'user' => lang('Privileges'),
 							);
 		$any_selected = false;
 		foreach ($start_pages as $key => $val)
 			if ($key)
 				$any_selected |= isset($_GET[$key]);
+		unset($start_pages["user"]);	// this item was only for $any_selected
 		foreach ($start_pages as $key => $val) {
 			if (support($key)) {
-				echo "<a href='" . h(ME) . "$key='" . bold($key ? ($key == "variables" ? isset($_GET[$key]) && !isset($_GET["status"]) : isset($_GET[$key])) : !$any_selected ) . ">$val</a>\n";
+				$item_selected = isset($_GET[$key]);
+				if ($key == "variables") {
+					$item_selected = $item_selected && !isset($_GET["status"]);
+				}
+				if ($key == "privileges") {
+					$item_selected = $item_selected || isset($_GET["user"]);
+				}
+				echo "<a href='" . h(ME) . "$key='" . bold($key ? $item_selected : !$any_selected ) . ">$val</a>\n";
 			}
 		}
 	}

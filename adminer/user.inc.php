@@ -116,6 +116,10 @@ if ($_POST && !$error) {
 }
 
 page_header((isset($_GET["host"]) ? lang('Username') . ": " . h("$USER@$_GET[host]") : lang('Create user')), $error, array("privileges" => array('', lang('Privileges'))));
+if (DB)
+	$adminer->homepage();
+else
+	$adminer->startLinks();
 
 if ($_POST) {
 	$row = $_POST;
