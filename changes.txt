@@ -7,6 +7,7 @@ Optimize referencable_primary() for MySQL
 Remove duplicates of collation-lists on `Alter table` page. Require JavaScript on client side! But support "nojs=1" argument to use old method.
 Add style chooser to select data export
 Support export table rows without AI keys
+Input binary UUID for MySQL
 Output binary UUID in hex
 Fix disabled <select> UI in Chrome
 Add detect `SQL command` page when URL containt '&table=' (allow to use UX plugin sql_command_table_fields)

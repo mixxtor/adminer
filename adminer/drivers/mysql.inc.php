@@ -1038,7 +1038,7 @@ if (!defined("DRIVER")) {
 	*/
 	function unconvert_field($field, $return) {
 		if (preg_match("~binary~", $field["type"])) {
-			$return = "UNHEX($return)";
+			$return = "UNHEX(REPLACE($return, '-', ''))";	// remove "-", because in some cases source value can be UUID
 		}
 		if ($field["type"] == "bit") {
 			$return = "CONV($return, 2, 10) + 0";
@@ -1092,7 +1092,7 @@ if (!defined("DRIVER")) {
 	$edit_functions = array( ///< @var array of array("$type|$type2" => "$function/$function2") functions used in editing, [0] - edit and insert, [1] - edit only
 		array(
 			"char" => "md5/sha1/password/encrypt/uuid", //! JavaScript for disabling maxlength
-			"binary" => "md5/sha1",
+			"binary" => "md5/sha1/uuid",
 			"date|time" => "now",
 		), array(
 			"(^|[^o])int|float|double|decimal" => "+/-", // not point
