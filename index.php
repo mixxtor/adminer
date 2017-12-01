@@ -52,16 +52,21 @@ function adminer_object()
 			<script type="text/javascript" src="<?=ADMINER_WEB_PATH?>static/functions.js"></script>
 			<script type="text/javascript" src="<?=ADMINER_WEB_PATH?>static/editing.js"></script>
 			<script>
-			document.addEventListener("DOMContentLoaded", function(event)
+			// store as separate function for possibility to use it in js-plugins
+			function adminerFixResourcesRelatedPath()
 			{
 				var inputs = document.getElementsByTagName("INPUT");
 				var i, cnt = inputs.length;
 				for (i=0; i<cnt; i++)
-					if (inputs[i].type == "image")
+					if ((inputs[i].type == "image") && (inputs[i].getAttribute("src").indexOf("../") === 0))
 					{
 						inputs[i].src = inputs[i].getAttribute("src").replace("../adminer/", "<?=ADMINER_WEB_PATH?>");
-						console.log(inputs[i].src);
 					}
+			}
+
+			document.addEventListener("DOMContentLoaded", function(event)
+			{
+				adminerFixResourcesRelatedPath();
 			});
 			</script>
 <?php if (file_exists("externals/jush")) { ?>

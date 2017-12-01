@@ -348,6 +348,9 @@ class AdminerTableStructureAdvanced
 								}
 							}
 						}
+
+						if (adminerFixResourcesRelatedPath)
+							adminerFixResourcesRelatedPath();
 					}
 				});
 
@@ -432,6 +435,9 @@ class AdminerTableStructureAdvanced
 									}
 								}
 							}
+
+							if (adminerFixResourcesRelatedPath)
+								adminerFixResourcesRelatedPath();
 						}
 					});
 				}
