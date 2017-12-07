@@ -272,6 +272,12 @@ class AdminerTableStructureAdvanced
 
 				window.myOpenAddRow = function(sender, next_to_index)
 				{
+					return false;	// will submit action from button
+				};
+
+				window.myOpenMoveRow = function(sender, next_to_index)
+				{
+					return false;	// will submit action from button
 				};
 
 				window.myConfirmRemoveIdx = function(sender, key_name)
@@ -342,7 +348,7 @@ class AdminerTableStructureAdvanced
 								if ((cell.innerText || cell.textContent) == field_name)
 								{
 									new_cell = document.createElement("TD");
-									new_cell.innerHTML = field_controls.replace("editingRemoveRow", "myConfirmRemoveRow").replace("editingAddRow", "myOpenAddRow");
+									new_cell.innerHTML = field_controls.replace("editingRemoveRow", "myConfirmRemoveRow").replace("editingAddRow", "myOpenAddRow").replace(/editingMoveRow/g, "myOpenMoveRow");
 									fields_rows[j].appendChild(new_cell);
 									break;
 								}
