@@ -8,7 +8,7 @@
 */
 class AdminerExecutedQueryOutputModifier
 {
-	private $TYPES_LIST = ["text_wrap", "link2show_full", "show_message_queries"];
+	private $TYPES_LIST = ["text_wrap", "link2show_full", "show_message_queries", "inline_edit_query"];
 
 	function __construct($types_list = [])
 	{
@@ -96,6 +96,88 @@ class AdminerExecutedQueryOutputModifier
 					link.innerHTML = italic_list[0].innerHTML;
 					code_list[0].insertBefore(link, italic_list[0]);
 					code_list[0].removeChild(italic_list[0]);
+				}
+<?php
+			}
+
+			if (in_array("inline_edit_query", $this->TYPES_LIST))
+			{
+?>
+				var code_list = document.getElementsByTagName("CODE");
+				if (code_list.length)
+				{
+					var funcShowInlineEditQuery = function(e)
+					{
+						var source_button = this;
+						ajax(this.href, function(request)
+						{
+							var source_button_box = source_button.parentNode;
+							if (request.responseText)
+							{
+								var forms_arr = request.responseText.split(/<form[^<>]*\>/);
+								if ((forms_arr.length < 2) || (forms_arr[1].indexOf("<textarea") < 0))
+									return;
+
+								var form_arr = forms_arr[1].split(/<fieldset[^<>]*\>/);
+
+								var new_form = document.createElement("FORM");
+								new_form.innerHTML = form_arr[0];
+								new_form.action = source_button.href;
+								new_form.method = "post";
+								new_form.enctype = "multipart/form-data";
+
+								var new_textarea = new_form.getElementsByTagName("TEXTAREA")[0];
+								new_textarea.rows = new_textarea.textContent.split("\n").length + 2;
+								new_textarea.style.height = "auto";
+								new_textarea.addEventListener("keydown", function(e)
+								{
+									if (e.keyCode == 27)	// Escape
+									{
+										source_button_box.style.display = "";
+										new_form.parentNode.removeChild(new_form);
+									}
+								});
+
+								new_form["mySourceCodeBox"] = source_button_box;
+								source_button_box.parentNode.insertBefore(new_form, source_button_box.nextSibling);
+								source_button_box.style.display = "none";
+								new_textarea.focus();	// fix dynamic elements, for example with submit_at_right plugin
+								if (window.dispatchEvent && Event)
+									window.dispatchEvent(new Event('resize'));
+							}
+						});
+
+						// cancel event
+						if (e.stopPropagation) e.stopPropagation();
+						if (e.preventDefault) e.preventDefault();
+						e.cancelBubble = true;
+						e.returnValue = false;
+						return false;
+					};
+
+					var i, cnt = code_list.length;
+					for (i=0; i<cnt; i++)
+					{
+						if (code_list[i].parentNode.tagName == "PRE")			// user defined query. can be truncated
+						{
+							// on this page we already has edit window under result
+							// nothing to do
+						}
+						else if (code_list[i].parentNode.tagName == "P")		// auto constructed query (sort, filter,..). always output fully
+						{
+							var query_element = code_list[i];
+							var edit_link = query_element;
+							while (edit_link && (edit_link.tagName != "A"))
+								edit_link = edit_link.nextSibling;
+							if (edit_link && (edit_link.href.indexOf("&sql=") > 0))
+								edit_link.addEventListener("click", funcShowInlineEditQuery);
+						}
+						else
+						{
+							// other codes, for example in result table
+							// nothing to do
+						}
+					}
 				}
 <?php
 			}
