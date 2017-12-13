@@ -47,7 +47,8 @@ class AdminerTableEditByFields
 
 				var funcEditTableField = function(evt)
 				{
-					if (evt.target && evt.target.type && (evt.target.type == "image"))
+					console.log(evt);
+					if (evt.target && evt.target.type && (evt.target.type == "image") && (evt.target.name.indexOf("up[") !== 0) && (evt.target.name.indexOf("down[") !== 0))
 						return false;
 					if (evt.keyCode && (evt.keyCode == 9))
 						return false;

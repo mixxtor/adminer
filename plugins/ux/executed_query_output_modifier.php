@@ -62,25 +62,59 @@ class AdminerExecutedQueryOutputModifier
 				var funcShowFullQuery = function(evt)
 				{
 					var code = evt.srcElement.parentNode;
-					var span = document.getElementById(code.parentNode.id.replace("sql-", "export-"));
-					if (!span)
-						return;
 
-					var inputs_list = span.getElementsByTagName("INPUT");
-					var i, cnt = inputs_list.length;
-					for (i=0; i<cnt; i++)
-						if (inputs_list[i].name == "query")
+					// try to get full sql from `export` button
+					if (code.parentNode.id)
+					{
+						var span = document.getElementById(code.parentNode.id.replace("sql-", "export-"));
+						if (span)
 						{
-							code.innerHTML = inputs_list[i].value;
+							var inputs_list = span.getElementsByTagName("INPUT");
+							var i, cnt = inputs_list.length;
+							for (i=0; i<cnt; i++)
+								if (inputs_list[i].name == "query")
+								{
+									code.innerHTML = inputs_list[i].value;
+									return;
+								}
+						}
+					}
+
+					// try to get full sql from `textarea`
+					var textareas = document.getElementsByName("query");
+					var i, cnt = textareas.length;
+					for (i=0; i<cnt; i++)
+						if (textareas[i].tagName == "TEXTAREA")	// CHECK: possible in some cases we have few queries per page
+						{
+							code.innerHTML = textareas[i].textContent;
 							return;
 						}
+
+					// try to get full sql from `edit` link
+					var box_links = code.parentNode.parentNode.getElementsByTagName("A");
+					var i, cnt = box_links.length;
+					for (i=0; i<cnt; i++)
+						if (box_links[i].href.indexOf("&history=") > 0)
+						{
+							ajax(box_links[i].href, function(request)
+							{
+								if (request.responseText)
+								{
+									var textareas_arr = request.responseText.split(/<\/?textarea[^<>]*\>/);
+									code.innerHTML = textareas_arr[1];		// content of first textarea
+								}
+							});
+							return;
+						}
+
 				};
 				var pre_list = document.getElementsByTagName("PRE");
 				var i, cnt = pre_list.length;
 				for (i=0; i<cnt; i++)
 				{
-					if (!pre_list[i].id)
-						continue;
+//					<pre> of alter table has no id
+//					if (!pre_list[i].id)
+//						continue;
 
 					var code_list = pre_list[i].getElementsByTagName("CODE");
 					if (!code_list.length)
