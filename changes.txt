@@ -31,11 +31,21 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.3.2-dev:
+Adminer 4.4.0 (released 2018-01-17):
+Add Content Security Policy
+Disallow scripts without nonce
+Rate limit password-less login attempts from the same IP address
+Disallow connecting to privileged ports
+Add nosniff header
+PHP 7.1: Prevent warning when using empty limit
+PHP 7.2: Prevent warning when searching in select
 MySQL: Remove dedicated view for replication status (added in 4.3.0)
 PostgreSQL: Sort table names (regression from 4.3.1)
 Editor: Don't set time zone from PHP, fixes DST
 Editor: Display field comment's text inside [] only in edit form
+Editor: Fix doubleclick on database page
+Editor: Fix Search data in tables
+Customization: Always send security headers
 Hebrew translation
 
 Adminer 4.3.1 (released 2017-04-14):

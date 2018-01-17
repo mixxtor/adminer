@@ -81,6 +81,30 @@ function charset($connection) {
 	return (version_compare($connection->server_info, "5.5.3") >= 0 ? "utf8mb4" : "utf8"); // SHOW CHARSET would require an extra query
 }
 
+/** Return <script> element
+* @param string
+* @param string
+* @return string
+*/
+function script($source, $trailing = "\n") {
+	return "<script" . nonce() . ">$source</script>$trailing";
+}
+
+/** Return <script src> element
+* @param string
+* @return string
+*/
+function script_src($url) {
+	return "<script src='" . h($url) . "'" . nonce() . "></script>\n";
+}
+
+/** Get a nonce="" attribute with CSP nonce
+* @return string
+*/
+function nonce() {
+	return ' nonce="' . get_nonce() . '"';
+}
+
 /** Escape for HTML
 * @param string
 * @return string
@@ -119,8 +143,8 @@ function checkbox($name, $value, $checked, $label = "", $onclick = "", $class = 
 	$return = "<input type='checkbox' name='$name' value='" . h($value) . "'"
 		. ($checked ? " checked" : "")
 		. ($labelled_by ? " aria-labelledby='$labelled_by'" : "")
-		. ($onclick ? ' onclick="' . h($onclick) . '"' : '')
 		. ">"
+		. ($onclick ? script("qsl('input').onclick = function () { $onclick };", "") : "")
 	;
 	return ($label != "" || $class ? "<label" . ($class ? " class='$class'" : "") . ">$return" . h($label) . "</label>" : $return);
 }
@@ -160,9 +184,10 @@ function optionlist($options, $selected = null, $use_keys = false) {
 function html_select($name, $options, $value = "", $onchange = true, $labelled_by = "") {
 	if ($onchange) {
 		return "<select name='" . h($name) . "'"
-			. (is_string($onchange) ? ' onchange="' . h($onchange) . '"' : "")
 			. ($labelled_by ? " aria-labelledby='$labelled_by'" : "")
-			. ">" . optionlist($options, $value) . "</select>";
+			. ">" . optionlist($options, $value) . "</select>"
+			. (is_string($onchange) ? script("qsl('select').onchange = function () { $onchange };", "") : "")
+		;
 	}
 	$return = "";
 	foreach ($options as $key => $val) {
@@ -172,35 +197,41 @@ function html_select($name, $options, $value = "", $onchange = true, $labelled_b
 }
 
 /** Generate HTML <select> or <input> if $options are empty
- * @param string
- * @param array
- * @param string
- * @param string
- * @return string
- */
-function select_input($attrs, $options, $value = "", $placeholder = "") {
-	return ($options
-		? "<select$attrs><option value=''>$placeholder" . optionlist($options, $value, true) . "</select>"
-		: "<input$attrs size='10' value='" . h($value) . "' placeholder='$placeholder'>"
-	);
+* @param string
+* @param array
+* @param string
+* @param string
+* @param string
+* @return string
+*/
+function select_input($attrs, $options, $value = "", $onchange = "", $placeholder = "") {
+	$tag = ($options ? "select" : "input");
+	return "<$tag$attrs" . ($options
+		? "><option value=''>$placeholder" . optionlist($options, $value, true) . "</select>"
+		: " size='10' value='" . h($value) . "' placeholder='$placeholder'>"
+	) . ($onchange ? script("qsl('$tag').onchange = $onchange;", "") : ""); //! use oninput for input
 }
 
 /** Get onclick confirmation
+* @param string
 * @return string
 */
-function confirm() {
-	return " onclick=\"return confirm('" . lang('Are you sure?') . "');\"";
+function confirm($selector = "qsl('input')") {
+	return script("$selector.onclick = function () { return confirm('" . lang('Are you sure?') . "'); };", "");
 }
 
 /** Print header for hidden fieldset (close by </div></fieldset>)
 * @param string
 * @param string
 * @param bool
-* @param string
 * @return null
 */
-function print_fieldset($id, $legend, $visible = false, $onclick = "") {
-	echo "<fieldset><legend><a href='#fieldset-$id' onclick=\"" . h($onclick) . "return !toggle('fieldset-$id');\">$legend</a></legend><div id='fieldset-$id'" . ($visible ? "" : " class='hidden'") . ">\n";
+function print_fieldset($id, $legend, $visible = false) {
+	echo "<fieldset><legend>";
+	echo "<a href='#fieldset-$id'>$legend</a>";
+	echo script("qsl('a').onclick = partial(toggle, 'fieldset-$id');", "");
+	echo "</legend>";
+	echo "<div id='fieldset-$id'" . ($visible ? "" : " class='hidden'") . ">\n";
 }
 
 /** Return class='active' if $bold is true
@@ -598,7 +629,7 @@ function query_redirect($query, $location, $message, $redirect = true, $execute 
 		$sql = $adminer->messageQuery($query, $time);
 	}
 	if ($failed) {
-		$error = error() . $sql;
+		$error = error() . $sql . script("messagesPrint();");
 		return false;
 	}
 	if ($redirect) {
@@ -895,7 +926,9 @@ function input($field, $value, $function, $field_group_idx = null) {
 		$attrs .= $onchange;
 		$has_function = (in_array($function, $functions) || isset($functions[$function]));
 		echo (count($functions) > 1
-			? "<select name='function[$name]' onchange='functionChange(this);'" . on_help("getTarget(event).value.replace(/^SQL\$/, '')", 1) . ">" . optionlist($functions, $function === null || $has_function ? $function : "") . "</select>"
+			? "<select name='function[$name]'>" . optionlist($functions, $function === null || $has_function ? $function : "") . "</select>"
+				. on_help("getTarget(event).value.replace(/^SQL\$/, '')", 1)
+				. script("qsl('select').onchange = functionChange;", "")
 			: nbsp(reset($functions))
 		) . '<td>';
 		$input = $adminer->editInput($_GET["edit"], $field, $attrs, $value); // usage in call is without a table
@@ -909,7 +942,7 @@ function input($field, $value, $function, $field_group_idx = null) {
 			foreach ($matches[1] as $i => $val) {
 				$val = stripcslashes(str_replace("''", "'", $val));
 				$checked = (is_int($value) ? ($value >> $i) & 1 : in_array($val, explode(",", $value), true));
-				echo " <label><input type='checkbox' name='fields[$name][$i]' value='" . (1 << $i) . "'" . ($checked ? ' checked' : '') . "$onchange>" . h($adminer->editVal($val, $field)) . '</label>';
+				echo " <label><input type='checkbox' name='fields[$name][$i]' value='" . (1 << $i) . "'" . ($checked ? ' checked' : '') . ">" . h($adminer->editVal($val, $field)) . '</label>';
 			}
 		} elseif (preg_match('~blob|bytea|raw|file~', $field["type"]) && ini_bool("file_uploads")) {
 			echo "<input type='file' name='fields-" . str_replace("][", "-", $name) . "'$onchange>";
@@ -938,6 +971,17 @@ function input($field, $value, $function, $field_group_idx = null) {
 			;
 		}
 		echo $adminer->editHint($_GET["edit"], $field, $value);
+		// skip 'original'
+		$first = 0;
+		foreach ($functions as $key => $val) {
+			if ($key === "" || !$val) {
+				break;
+			}
+			$first++;
+		}
+		if ($first) {
+			echo script("mixin(qsl('td'), {onchange: partial(skipOriginal, $first), oninput: function () { this.onchange(); }});");
+		}
 	}
 }
 
@@ -1031,7 +1075,6 @@ function fields_from_edit() {
 */
 function search_tables() {
 	global $adminer, $connection;
-	$_GET["where"][0]["op"] = "LIKE %%";
 	$_GET["where"][0]["val"] = $_POST["query"];
 	$found = false;
 	foreach (table_status('', true) as $table => $table_status) {
@@ -1244,7 +1287,7 @@ function slow_query($query) {
 	if (support("kill") && is_object($connection2 = connect()) && ($db == "" || $connection2->select_db($db))) {
 		$kill = $connection2->result(connection_id()); // MySQL and MySQLi can use thread_id but it's not in PDO_MySQL
 		?>
-<script type="text/javascript">
+<script<?php echo nonce(); ?>>
 var timeout = setTimeout(function () {
 	ajax('<?php echo js_escape(ME); ?>script=kill', function () {
 	}, 'token=<?php echo $token; ?>&kill=<?php echo $kill; ?>');
@@ -1258,7 +1301,7 @@ var timeout = setTimeout(function () {
 	flush();
 	$return = @get_key_vals($query, $connection2, $timeout); // @ - may be killed
 	if ($connection2) {
-		echo "<script type='text/javascript'>clearTimeout(timeout);</script>\n";
+		echo script("clearTimeout(timeout);");
 		ob_flush();
 		flush();
 	}
@@ -1325,7 +1368,7 @@ function lzw_decompress($binary) {
 * @return string
 */
 function on_help($command, $side = 0) {
-	return " onmouseover='helpMouseover(this, event, " . h($command) . ", $side);' onmouseout='helpMouseout(this, event);'";
+	return script("mixin(qsl('select, input'), {onmouseover: function (event) { helpMouseover.call(this, event, $command, $side) }, onmouseout: helpMouseout});", "");
 }
 
 /** Print edit data form
@@ -1367,7 +1410,7 @@ function edit_form($TABLE, $fields, $row, $update) {
 		foreach ($rows_list as $row_key => $row) {
 			if (count($rows_list) == 1)
 				$row_key = null;
-			echo "<table cellspacing='0' onkeydown='return editingKeydown(event);'>\n";
+			echo "<table cellspacing='0'>" . script("qsl('table').onkeydown = editingKeydown;");
 
 			foreach ($fields as $name => $field) {
 				echo "<tr><th>" . $adminer->fieldName($field) . ($field["comment"] ? "<br /><small>".$field["comment"]."</small>" : "");
@@ -1407,7 +1450,8 @@ function edit_form($TABLE, $fields, $row, $update) {
 			}
 			if (!support("table")) {
 				echo "<tr>"
-					. "<th><input name='field_keys[]' onkeyup='keyupChange.call(this);' onchange='fieldChange(this);' value=''>" // needs empty value for keyupChange()
+				. "<th><input name='field_keys[]'>"
+				. script("qsl('input').oninput = fieldChange;")
 					. "<td class='function'>" . html_select("field_funs[]", $adminer->editFunctions(array("null" => isset($_GET["select"]))))
 					. "<td><input name='field_vals[]'>"
 					. "\n"
@@ -1421,13 +1465,14 @@ function edit_form($TABLE, $fields, $row, $update) {
 		echo "<input type='submit' value='" . lang('Save') . "'>\n";
 		if (!isset($_GET["select"])) {
 			echo "<input type='submit' name='insert' value='" . ($update
-				? lang('Save and continue edit') . "' onclick='return !ajaxForm(this.form, \"" . lang('Saving') . '...", this)'
+				? lang('Save and continue edit')
 				: lang('Save and insert next')
 			) . "' title='Ctrl+Shift+Enter'>\n";
+			echo ($update ? script("qsl('input').onclick = function () { return !ajaxForm(this.form, '" . lang('Saving') . "...', this); };") : "");
 		}
 	}
-	echo ($update ? (is_array($update) ? "" : "<input type='submit' name='delete' value='" . lang('Delete') . "'" . confirm() . ">\n")
-		: ($_POST || !$fields ? "" : "<script type='text/javascript'>focus(document.getElementById('form').getElementsByTagName('td')[1].firstChild);</script>\n")
+	echo ($update ? (is_array($update) ? "" : "<input type='submit' name='delete' value='" . lang('Delete') . "'>" . confirm() . "\n")
+		: ($_POST || !$fields ? "" : script("focus(qsa('td', qs('#form'))[1].firstChild);"))
 	);
 	if (isset($_GET["select"])) {
 		hidden_fields(array("check" => (array) $_POST["check"], "clone" => $_POST["clone"], "all" => $_POST["all"]));
