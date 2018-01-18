@@ -42,6 +42,7 @@ var offlineMessage = '<?php echo js_escape(lang('You are offline.')); ?>';
 <div id="help" class="jush-<?php echo $jush; ?> jsonly hidden"></div>
 <?php echo script("mixin(qs('#help'), {onmouseover: function () { helpOpen = 1; }, onmouseout: helpMouseout});"); ?>
 
+<div id="content_scroll_box">
 <div id="content">
 <?php
 	if ($breadcrumb !== null) {
@@ -155,7 +156,8 @@ function page_messages($error) {
 function page_footer($missing = "") {
 	global $adminer, $token;
 	?>
-</div>
+</div>	<!-- end of content -->
+</div>	<!-- end of content_scroll_box -->
 
 <?php switch_lang(); ?>
 <?php if ($missing != "auth") { ?>

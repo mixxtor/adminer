@@ -137,20 +137,20 @@ class AdminerFramesetSimulator
 <?php
 			}
 ?>
-			// TODO:
-			// 1. remove content_scroll_box (it change DOM and add +1 second to render large pages)
-			// 2. get margins/padings/left/top from content and convert them to left/top
-
 			// setup content box
 			var content = document.getElementById("content");
 			if (GetStyleOfElement(content, "position") == "absolute")
 				content.style.position = "static";
 
-			var content_scroll_box = document.createElement("DIV");
-			content_scroll_box.id = "content_scroll_box";
-			content_scroll_box.tabIndex = -1;									// without tabIndex focus() did not work
-			content.parentNode.insertBefore( content_scroll_box, content );
-			content_scroll_box.appendChild(content);
+			var content_scroll_box = document.getElementById("content_scroll_box");
+			if (!content_scroll_box)
+			{
+				content_scroll_box = document.createElement("DIV");
+				content_scroll_box.id = "content_scroll_box";
+				content.parentNode.insertBefore( content_scroll_box, content );
+				content_scroll_box.appendChild(content);
+			}
+			content_scroll_box.tabIndex = -1;									// focus() did not work without tabIndex
 			content_scroll_box.style.position = "absolute";
 
 			// setup content box sizes
