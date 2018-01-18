@@ -27,7 +27,7 @@ class AdminerTableStructureAdvanced
 
 		global $TABLE;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 <?php

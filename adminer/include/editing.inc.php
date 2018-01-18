@@ -180,7 +180,7 @@ echo optionlist($structured_types, $type);
 	}
 	echo "</select>";
 	if (is_string($collations)) {
-		echo "<script>document.addEventListener('DOMContentLoaded', function(event) { var row_coll = document.getElementsByName('" . h($key) . "[collation]')[0]; row_coll.innerHTML = document.getElementsByName('".$collations."')[0].innerHTML; row_coll.setAttribute('value', '".$field["collation"]."'); });</script>";
+		echo "<script".nonce().">document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ var row_coll = document.getElementsByName('" . h($key) . "[collation]')[0]; row_coll.innerHTML = document.getElementsByName('".$collations."')[0].innerHTML; row_coll.setAttribute('value', '".$field["collation"]."'); }, 10); });</script>";
 	}
 	echo ($unsigned ? "<select name='" . h($key) . "[unsigned]'" . (!$type || preg_match('~((^|[^o])int|float|double|decimal)$~', $type) ? "" : " class='hidden'") . '><option>' . optionlist($unsigned, $field["unsigned"]) . '</select>' : '');
 	echo (isset($field['on_update']) ? "<select name='" . h($key) . "[on_update]'" . (preg_match('~timestamp|datetime~', $type) ? "" : " class='hidden'") . '>' . optionlist(array("" => "(" . lang('ON UPDATE') . ")", "CURRENT_TIMESTAMP"), $field["on_update"]) . '</select>' : '');

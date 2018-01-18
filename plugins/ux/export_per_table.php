@@ -15,7 +15,7 @@ class AdminerExportPerTable
 		if (function_exists("get_page_table") && (get_page_table() === ""))
 			return;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			// add "SQL commmand" to table content

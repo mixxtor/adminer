@@ -13,7 +13,7 @@ class AdminerTableRecordFieldDetails
 		if (Adminer::database() === null)
 			return;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			// Output field comments in record editor

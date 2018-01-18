@@ -16,7 +16,7 @@ class AdminerTableEditByFields
 		if (!function_exists("get_page_table"))		// not modified adminer sources did not support this plugin
 			return;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			var fieldsTable = document.getElementById("edit-fields");
@@ -26,7 +26,14 @@ class AdminerTableEditByFields
 			// get text words (edit / modify)
 			// TODO: use JS side dictionary, when it will be ready
 			var current_location = document.location.href;
-			eval(("var myAjax = "+ajax).replace("function ajax(", "function(").replace(/([\'\"]X-Requested-With[\'\"]\s*,\s*[\'\"])XMLHttpRequest([\'\"])/, "$1$2"));
+			if (!window.myAjax)
+			{
+				var myAjaxScript = document.createElement("SCRIPT");
+				myAjaxScript.innerHTML = ("var myAjax = "+ajax).replace("function ajax(", "function(").replace(/([\'\"]X-Requested-With[\'\"]\s*,\s*[\'\"])XMLHttpRequest([\'\"])/, "$1$2");
+				myAjaxScript.nonce = '<?=nonce()?>'.replace(/^[^"]+"/, "").replace(/"$/, "");
+				document.getElementsByTagName("BODY")[0].appendChild(myAjaxScript);
+			}
+
 			// via modified function, because we need full page, not only result table
 			myAjax(current_location.replace(/&create=([^&]*)/, "&select=$1")+"&limit=1", function(request)
 			{
@@ -122,7 +129,14 @@ class AdminerTableEditByFields
 							if (inputs[j].type == "image")
 							{
 								if (edit_link && inputs[j].name.indexOf("add[") === 0)
-									inputs[j].setAttribute("onclick", inputs[j].getAttribute("onclick").replace(/return /, "return uxEditableFieldBeforeAction(this) && "));
+								{
+									var originalOnClick = inputs[j].onclick;
+									inputs[j].onclick = function(event){
+										uxEditableFieldBeforeAction(this);
+										originalOnClick.apply(this);
+										return false;
+									};
+								}
 							}
 							else if (inputs[j].type != "hidden")
 							{
@@ -179,21 +193,23 @@ class AdminerTableEditByFields
 
 				if (edit_link)
 				{
-					// fix "Default" and "Comment" checkbox handlers
+					// fix "Default" and "Comment" checkbox handlers. We have +1 column => shift previous indexes
 					var inp_defaults = document.getElementsByName("defaults");
 					for (i=0; i<inp_defaults.length; i++)
 						if (inp_defaults[i].form === fieldsTable.parentNode)
 						{
-//							inp_defaults[i].parentNode.innerHTML = inp_defaults[i].parentNode.innerHTML.replace("columnShow(this.checked, 5)", "columnShow(this.checked, 6)");
-							inp_defaults[i].setAttribute("onclick", inp_defaults[i].getAttribute("onclick").replace("columnShow(this.checked, 5)", "columnShow(this.checked, 6)"));
+							inp_defaults[i].onclick = function(event){
+								columnShow(this.checked, 6);
+							};
 							break;
 						}
 					var inp_comments = document.getElementsByName("comments");
 					for (i=0; i<inp_comments.length; i++)
 						if (inp_comments[i].form === fieldsTable.parentNode)
 						{
-//							inp_comments[i].parentNode.innerHTML = inp_comments[i].parentNode.innerHTML.replace("columnShow(this.checked, 6)", "columnShow(this.checked, 7)");
-							inp_comments[i].setAttribute("onclick", inp_comments[i].getAttribute("onclick").replace("columnShow(this.checked, 6)", "columnShow(this.checked, 7)"));
+							inp_comments[i].onclick = function(event){
+								columnShow(this.checked, 7);
+							};
 							break;
 						}
 				}

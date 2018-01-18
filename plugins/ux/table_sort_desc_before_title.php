@@ -11,7 +11,7 @@ class AdminerTableSortDescBeforeTitle
 	function head()
 	{
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			var tbl = document.getElementById("table");

@@ -101,7 +101,7 @@ class Adminer {
 <tr><th><?php echo lang('Database'); ?><td><input name="auth[db]" value="<?php echo h($_GET["db"]); ?>" autocapitalize="off">
 </table>
 <?php
-		echo script("focus(qs('#username'));"); 
+		echo script("focus(qs('#username'));");
 		echo "<p><input type='submit' value='" . lang('Login') . "'>\n";
 		echo checkbox("auth[permanent]", 1, $_COOKIE["adminer_permanent"], lang('Permanent login')) . "\n";
 	}
@@ -406,7 +406,7 @@ class Adminer {
 				echo html_select("where[$i][op]", $this->operators, $val["op"], $change_next);
 				echo "<input type='search' name='where[$i][val]' value='" . h($val["val"]) . "'>";
 				echo script("mixin(qsl('input'), {oninput: function () { $change_next }, onkeydown: selectSearchKeydown, onsearch: selectSearchSearch});", "");
-				echo "<button type='button' class='icon'><img src='../adminer/static/cross.gif' alt='x' title='" . lang('Remove') . "' /></button></div>\n";
+				echo "<button type='button' class='icon'><img src='../adminer/static/cross.gif' alt='x' title='" . lang('Remove') . "' /></button>\n";
 				echo script("mixin(qsl('button'), {onclick: selectSearchRemoveRow});", "");
 				echo "</div>\n";
 			}

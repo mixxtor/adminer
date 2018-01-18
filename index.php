@@ -49,9 +49,9 @@ function adminer_object()
 			<link rel="stylesheet" type="text/css" href="designs/nette-mod/adminer.css" />
 <?php } ?>
 
-			<script type="text/javascript" src="<?=ADMINER_WEB_PATH?>static/functions.js"></script>
-			<script type="text/javascript" src="<?=ADMINER_WEB_PATH?>static/editing.js"></script>
-			<script>
+			<script type="text/javascript" src="<?=ADMINER_WEB_PATH?>static/functions.js"<?=nonce()?>></script>
+			<script type="text/javascript" src="<?=ADMINER_WEB_PATH?>static/editing.js"<?=nonce()?>></script>
+			<script<?=nonce()?>>
 			// store as separate function for possibility to use it in js-plugins
 			function adminerFixResourcesRelatedPath()
 			{
@@ -71,10 +71,10 @@ function adminer_object()
 			</script>
 <?php if (file_exists("externals/jush")) { ?>
 			<link rel="stylesheet" type="text/css" href="externals/jush/jush.css" />
-			<script type="text/javascript" src="externals/jush/modules/jush.js"></script>
-			<script type="text/javascript" src="externals/jush/modules/jush-textarea.js"></script>
-			<script type="text/javascript" src="externals/jush/modules/jush-txt.js"></script>
-			<script type="text/javascript" src="externals/jush/modules/jush-sql.js"></script>
+			<script type="text/javascript" src="externals/jush/modules/jush.js"<?=nonce()?>></script>
+			<script type="text/javascript" src="externals/jush/modules/jush-textarea.js"<?=nonce()?>></script>
+			<script type="text/javascript" src="externals/jush/modules/jush-txt.js"<?=nonce()?>></script>
+			<script type="text/javascript" src="externals/jush/modules/jush-sql.js"<?=nonce()?>></script>
 <?php } ?>
 <?php
 			return false;		// do not use default adminer.css + few other files

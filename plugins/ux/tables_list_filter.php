@@ -13,7 +13,7 @@ class AdminerTablesListFilter
 		if (Adminer::database() === null)
 			return;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		// text wrap in <code> blocks
 		var style = document.createElement('style');
 		style.type = 'text/css';

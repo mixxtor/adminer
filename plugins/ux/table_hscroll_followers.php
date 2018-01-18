@@ -11,7 +11,7 @@ class AdminerTableHScrollFollowers
 	function head()
 	{
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			// move table main controls on horizontal scroll

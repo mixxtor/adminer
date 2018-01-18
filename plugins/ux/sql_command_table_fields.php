@@ -13,7 +13,7 @@ class AdminerSqlCommandTableFields
 		if (Adminer::database() === null)
 			return;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			// add table fields to query textarea
@@ -163,7 +163,14 @@ class AdminerSqlCommandTableFields
 				{
 					// detect quotes type
 					// TODO: try to get quotes from `jush` config
-					eval(("var myAjax = "+ajax).replace("function ajax(", "function(").replace(/([\'\"]X-Requested-With[\'\"]\s*,\s*[\'\"])XMLHttpRequest([\'\"])/, "$1$2"));
+					if (!window.myAjax)
+					{
+						var myAjaxScript = document.createElement("SCRIPT");
+						myAjaxScript.innerHTML = ("var myAjax = "+ajax).replace("function ajax(", "function(").replace(/([\'\"]X-Requested-With[\'\"]\s*,\s*[\'\"])XMLHttpRequest([\'\"])/, "$1$2");
+						myAjaxScript.nonce = '<?=nonce()?>'.replace(/^[^"]+"/, "").replace(/"$/, "");
+						document.getElementsByTagName("BODY")[0].appendChild(myAjaxScript);
+					}
+
 					// via modified function, because we need full page, not only result table
 					myAjax(current_location.replace(/&sql=[^&]*/, "").replace(/&table=[^&]*/, "")+"&select="+encodeURIComponent(tables_array[0])+"&limit=1", function(request)
 					{

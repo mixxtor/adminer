@@ -20,7 +20,7 @@ class AdminerFramesetSimulator
 	function head()
 	{
 ?>
-		<script>
+		<script<?=nonce()?>>
 <?php
 		if ($this->DETECT_SINGLE_LANGUAGE_MODE && empty($GLOBALS["langs"]))
 		{
@@ -137,6 +137,9 @@ class AdminerFramesetSimulator
 <?php
 			}
 ?>
+			// TODO:
+			// 1. remove content_scroll_box (it change DOM and add +1 second to render large pages)
+			// 2. get margins/padings/left/top from content and convert them to left/top
 
 			// setup content box
 			var content = document.getElementById("content");

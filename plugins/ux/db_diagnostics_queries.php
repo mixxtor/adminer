@@ -15,7 +15,7 @@ class AdminerDbDiagnosticsQueries
 		if (function_exists("get_page_table") && (get_page_table() !== ""))		// for selected table turn off. Currently we don't have queries for this case
 			return;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 			// add shortcut for some queries

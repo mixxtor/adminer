@@ -27,7 +27,7 @@ class AdminerDuplicateResultControls
 		if (!$this->TYPES_LIST)
 			return;
 ?>
-		<script>
+		<script<?=nonce()?>>
 		document.addEventListener("DOMContentLoaded", function(event)
 		{
 <?php
@@ -108,9 +108,14 @@ class AdminerDuplicateResultControls
 								for (i=0; i<els_list.length; i++)
 									if (els_list[i].href)
 									{
-										els_list[i].setAttribute("href", els_list[i].getAttribute("href").replace(/^#(explain|export)-(\d+)$/, "#$1-$2-2"));
-										if (els_list[i].getAttribute("onclick"))
-											els_list[i].setAttribute("onclick", els_list[i].getAttribute("onclick").replace(/'(explain|export)-(\d+)'/, "'$1-$2-2'"));
+										var old_href = els_list[i].getAttribute("href");
+										if (old_href.indexOf("#exp") === 0)
+										{
+											var new_href = old_href.replace(/^#(explain|export)-(\d+)$/, "#$1-$2-2");
+											els_list[i].setAttribute("href", new_href);
+
+											els_list[i].onclick = partial(toggle, new_href.substr(1));
+										}
 									}
 
 								// collect new elements
