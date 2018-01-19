@@ -49,6 +49,7 @@ class AdminerDuplicateResultControls
 						var a_list = new_pages_box.getElementsByTagName("A");
 						if (a_list[a_list.length-1].className.split(/\s+/).indexOf("loadmore") != -1)
 							new_pages_box.removeChild(a_list[a_list.length-1]);
+						a_list[0].onclick = function(){ pageClick(this.href, +prompt('Page', '1')); return false; };	// restore event handler
 						new_pages_box = table_box.parentNode.insertBefore( new_pages_box, table_box );
 
 						// copy also rows number
