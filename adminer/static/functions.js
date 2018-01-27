@@ -390,8 +390,11 @@ function selectAddRow() {
 	field.parentNode.parentNode.appendChild(row);
 }
 
-function selectSearchRemoveRow(el) {
-	var search_row = el.parentNode;
+function selectSearchRemoveRow(event) {
+	var el = getTarget(event);
+	var search_row = el;
+	while (!search_row.getElementsByTagName('select').length)
+		search_row = search_row.parentNode;
 	var search_rows = search_row.parentNode;
 
 	var selects = search_rows.getElementsByTagName('select');
@@ -412,9 +415,7 @@ function selectSearchRemoveRow(el) {
 	}
 
 	// restore possibility to append searches
-	inputs[ inputs.length-2 ].onchange = function() {
-		selectAddRow(this);
-	};
+	selects[ selects.length-2 ].onchange = selectAddRow;
 }
 
 /** Prevent onsearch handler on Enter
@@ -900,7 +901,7 @@ function focus(el) {
 */
 function cloneNode(el) {
 	var el2 = el.cloneNode(true);
-	var selector = 'input, select';
+	var selector = 'input, select, button';
 	var origEls = qsa(selector, el);
 	var cloneEls = qsa(selector, el2);
 	for (var i=0; i < origEls.length; i++) {
