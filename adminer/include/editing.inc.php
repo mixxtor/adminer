@@ -226,7 +226,7 @@ function process_field($field, $type_field) {
 		process_type($type_field),
 		($field["null"] ? " NULL" : " NOT NULL"), // NULL for timestamp
 		(isset($default) ? " DEFAULT " . (
-			(preg_match('~time~', $field["type"]) && preg_match('~^CURRENT_TIMESTAMP$~i', $default))
+			(preg_match('~time~', $field["type"]) && preg_match('~^CURRENT_TIMESTAMP(\(\))?$~i', $default))
 			|| ($jush == "sqlite" && preg_match('~^CURRENT_(TIME|TIMESTAMP|DATE)$~i', $default))
 			|| ($field["type"] == "bit" && preg_match("~^([0-9]+|b'[0-1]+')\$~", $default))
 			|| ($jush == "pgsql" && preg_match("~^[a-z]+\\(('[^']*')+\\)\$~", $default))
@@ -563,7 +563,7 @@ function doc_link($paths) {
 		'mssql' => "https://msdn.microsoft.com/library/",
 		'oracle' => "https://download.oracle.com/docs/cd/B19306_01/server.102/b14200/",
 	);
-	return ($paths[$jush] ? "<a href='$urls[$jush]$paths[$jush]' target='_blank' rel='noreferrer'><sup>?</sup></a>" : "");
+	return ($paths[$jush] ? "<a href='$urls[$jush]$paths[$jush]'" . target_blank() . "><sup>?</sup></a>" : "");
 }
 
 /** Wrap gzencode() for usage in ob_start()
@@ -596,7 +596,7 @@ function db_size($db) {
 * @return null
 */
 function set_utf8mb4($create) {
-  global $connection;
+	global $connection;
 	static $set = false;
 	if (!$set && preg_match('~\butf8mb4~i', $create)) { // possible false positive
 		$set = true;

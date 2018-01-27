@@ -38,7 +38,7 @@ function escape_string($val) {
 * @return string
 */
 function number($val) {
-  return preg_replace('~[^0-9]+~', '', $val);
+	return preg_replace('~[^0-9]+~', '', $val);
 }
 
 /** Disable magic_quotes_gpc
@@ -103,6 +103,13 @@ function script_src($url) {
 */
 function nonce() {
 	return ' nonce="' . get_nonce() . '"';
+}
+
+/** Get a target="_blank" attribute
+* @return string
+*/
+function target_blank() {
+	return ' target="_blank" rel="noopener"';
 }
 
 /** Escape for HTML
@@ -214,10 +221,11 @@ function select_input($attrs, $options, $value = "", $onchange = "", $placeholde
 
 /** Get onclick confirmation
 * @param string
+* @param string
 * @return string
 */
-function confirm($selector = "qsl('input')") {
-	return script("$selector.onclick = function () { return confirm('" . lang('Are you sure?') . "'); };", "");
+function confirm($message = "", $selector = "qsl('input')") {
+	return script("$selector.onclick = function () { return confirm('" . ($message ? js_escape($message) : lang('Are you sure?')) . "'); };", "");
 }
 
 /** Print header for hidden fieldset (close by </div></fieldset>)
@@ -360,9 +368,10 @@ function get_vals($query, $column = 0) {
 * @param string
 * @param Min_DB
 * @param float
+* @param bool
 * @return array
 */
-function get_key_vals($query, $connection2 = null, $timeout = 0) {
+function get_key_vals($query, $connection2 = null, $timeout = 0, $set_keys = true) {
 	global $connection;
 	if (!is_object($connection2)) {
 		$connection2 = $connection;
@@ -373,7 +382,11 @@ function get_key_vals($query, $connection2 = null, $timeout = 0) {
 	$connection2->timeout = 0;
 	if (is_object($result)) {
 		while ($row = $result->fetch_row()) {
-			$return[$row[0]] = $row[1];
+			if ($set_keys) {
+				$return[$row[0]] = $row[1];
+			} else {
+				$return[] = $row[0];
+			}
 		}
 	}
 	return $return;
@@ -797,7 +810,7 @@ function shorten_utf8($string, $length = 80, $suffix = "") {
 * @return string
 */
 function format_number($val) {
-  return strtr(number_format($val, 0, ".", lang(',')), preg_split('~~u', lang('0123456789'), -1, PREG_SPLIT_NO_EMPTY));
+	return strtr(number_format($val, 0, ".", lang(',')), preg_split('~~u', lang('0123456789'), -1, PREG_SPLIT_NO_EMPTY));
 }
 
 /** Generate friendly URL
@@ -936,7 +949,7 @@ function input($field, $value, $function, $field_group_idx = null) {
 			echo $input;
 		} elseif (preg_match('~bool~', $field["type"])) {
 			echo "<input type='hidden'$attrs value='0'>" .
-				"<input type='checkbox'" . (in_array(strtolower($value), array('1',  't',  'true',  'y',  'yes',  'on')) ? " checked='checked'" : "") . "$attrs value='1'>";
+				"<input type='checkbox'" . (preg_match('~^(1|t|true|y|yes|on)$~i', $value) ? " checked='checked'" : "") . "$attrs value='1'>";
 		} elseif ($field["type"] == "set") { //! 64 bits
 			preg_match_all("~'((?:[^']|'')*)'~", $field["length"], $matches);
 			foreach ($matches[1] as $i => $val) {
@@ -1155,6 +1168,35 @@ function get_temp_dir() {
 	return $return;
 }
 
+/** Open and exclusively lock a file
+* @param string
+* @return resource or null for error
+*/
+function file_open_lock($filename) {
+	$fp = @fopen($filename, "r+"); // @ - may not exist
+	if (!$fp) { // c+ is available since PHP 5.2.6
+		$fp = @fopen($filename, "w"); // @ - may not be writable
+		if (!$fp) {
+			return;
+		}
+		chmod($filename, 0660);
+	}
+	flock($fp, LOCK_EX);
+	return $fp;
+}
+
+/** Write and unlock a file
+* @param resource
+* @param string
+*/
+function file_write_unlock($fp, $data) {
+	rewind($fp);
+	fwrite($fp, $data);
+	ftruncate($fp, strlen($data));
+	flock($fp, LOCK_UN);
+	fclose($fp);
+}
+
 /** Read password from file adminer.key in temporary directory or create one
 * @param bool
 * @return string or false if the file can not be created
@@ -1290,7 +1332,7 @@ function slow_query($query) {
 <script<?php echo nonce(); ?>>
 var timeout = setTimeout(function () {
 	ajax('<?php echo js_escape(ME); ?>script=kill', function () {
-	}, 'token=<?php echo $token; ?>&kill=<?php echo $kill; ?>');
+	}, 'kill=<?php echo $kill; ?>&token=<?php echo $token; ?>');
 }, <?php echo 1000 * $timeout; ?>);
 </script>
 <?php
@@ -1299,13 +1341,13 @@ var timeout = setTimeout(function () {
 	}
 	ob_flush();
 	flush();
-	$return = @get_key_vals($query, $connection2, $timeout); // @ - may be killed
+	$return = @get_key_vals($query, $connection2, $timeout, false); // @ - may be killed
 	if ($connection2) {
 		echo script("clearTimeout(timeout);");
 		ob_flush();
 		flush();
 	}
-	return array_keys($return);
+	return $return;
 }
 
 /** Generate BREACH resistant CSRF token

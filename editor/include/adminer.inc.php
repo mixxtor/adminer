@@ -4,7 +4,7 @@ class Adminer {
 	var $_values = array();
 
 	function name() {
-		return "<a href='https://www.adminer.org/editor/' target='_blank' id='h1'>" . lang('Editor') . "</a>";
+		return "<a href='https://www.adminer.org/editor/'" . target_blank() . " id='h1'>" . lang('Editor') . "</a>";
 	}
 
 	//! driver, ns
@@ -53,6 +53,15 @@ class Adminer {
 
 	function head() {
 		return true;
+	}
+
+	function css() {
+		$return = array();
+		$filename = "adminer.css";
+		if (file_exists($filename)) {
+			$return[] = $filename;
+		}
+		return $return;
 	}
 
 	function loginForm() {
@@ -183,7 +192,7 @@ ORDER BY ORDINAL_POSITION", null, "") as $row) { //! requires MySQL 5
 			}
 		}
 		if (like_bool($field) && $return != "&nbsp;") { // bool
-			$return = ($val ? lang('yes') : lang('no'));
+			$return = (preg_match('~^(1|t|true|y|yes|on)$~i', $value) ? lang('yes') : lang('no'));
 		}
 		if ($link) {
 			$return = "<a href='$link'" . (is_url($link) ? " rel='noreferrer'" : "") . ">$return</a>";
@@ -461,7 +470,7 @@ ORDER BY ORDINAL_POSITION", null, "") as $row) { //! requires MySQL 5
 		if ($options !== null) {
 			return (is_array($options)
 				? "<select$attrs>" . optionlist($options, $value, true) . "</select>"
-				:  "<input value='" . h($value) . "'$attrs class='hidden'>"
+				: "<input value='" . h($value) . "'$attrs class='hidden'>"
 					. "<input value='" . h($options) . "' class='jsonly'>"
 					. "<div></div>"
 					. script("qsl('input').oninput = partial(whisper, '" . ME . "script=complete&source=" . urlencode($table) . "&field=" . urlencode($field["field"]) . "&value=');
@@ -549,6 +558,9 @@ qsl('div').onclick = whisperClick;", "")
 		return $ext;
 	}
 
+	function importServerPath() {
+	}
+
 	function homepage() {
 		return true;
 	}
@@ -558,7 +570,7 @@ qsl('div').onclick = whisperClick;", "")
 		?>
 <h1>
 <?php echo $this->name(); ?> <span class="version"><?php echo $VERSION; ?></span>
-<a href="https://www.adminer.org/editor/#download" target="_blank" id="version"><?php echo (version_compare($VERSION, $_COOKIE["adminer_version"]) < 0 ? h($_COOKIE["adminer_version"]) : ""); ?></a>
+<a href="https://www.adminer.org/editor/#download"<?php echo target_blank(); ?> id="version"><?php echo (version_compare($VERSION, $_COOKIE["adminer_version"]) < 0 ? h($_COOKIE["adminer_version"]) : ""); ?></a>
 </h1>
 <?php
 		if ($missing == "auth") {
@@ -592,17 +604,19 @@ qsl('div').onclick = whisperClick;", "")
 	}
 
 	function tablesPrint($tables) {
-		echo "<p id='tables'>";
+		echo "<ul id='tables'>";
 		echo script("mixin(qs('#tables'), {onmouseover: menuOver, onmouseout: menuOut});");
 		foreach ($tables as $row) {
+			echo '<li>';
 			$name = $this->tableName($row);
 			if (isset($row["Engine"]) && $name != "") { // ignore views and tables without name
 				echo "<a href='" . h(ME) . 'select=' . urlencode($row["Name"]) . "'"
 					. bold($_GET["select"] == $row["Name"] || $_GET["edit"] == $row["Name"], "select")
-					. " title='" . lang('Select data') . "'>$name</a><br>\n"
+					. " title='" . lang('Select data') . "'>$name</a>\n"
 				;
 			}
 		}
+		echo "</ul>\n";
 	}
 
 	function _foreignColumn($foreignKeys, $column) {

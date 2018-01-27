@@ -9,7 +9,7 @@ class Adminer {
 	* @return string HTML code
 	*/
 	function name() {
-		return "<a href='https://www.adminer.org/' target='_blank' id='h1'>Adminer</a>";
+		return "<a href='https://www.adminer.org/'" . target_blank() . " id='h1'>Adminer</a>";
 	}
 
 	/** Connection parameters
@@ -78,13 +78,25 @@ class Adminer {
 	}
 
 	/** Print HTML code inside <head>
-	* @return bool true to link adminer.css if exists
+	* @return bool true to link favicon.ico and adminer.css if exists
 	*/
 	function head() {
 		?>
 <link rel="stylesheet" type="text/css" href="../externals/jush/jush.css">
 <?php
 		return true;
+	}
+
+	/** Get URLs of the CSS files
+	* @return array of strings
+	*/
+	function css() {
+		$return = array();
+		$filename = "adminer.css";
+		if (file_exists($filename)) {
+			$return[] = $filename;
+		}
+		return $return;
 	}
 
 	/** Print login form
@@ -114,7 +126,7 @@ class Adminer {
 	function login($login, $password) {
 		global $jush;
 		if ($jush == "sqlite") {
-			return lang('<a href="https://www.adminer.org/en/extension/" target="_blank">Implement</a> %s method to use SQLite.', '<code>login()</code>');
+			return lang('<a href="https://www.adminer.org/en/extension/"%s>Implement</a> %s method to use SQLite.', target_blank(), '<code>login()</code>');
 		}
 		return true;
 	}
@@ -281,7 +293,7 @@ class Adminer {
 	* @return string
 	*/
 	function selectVal($val, $link, $field, $original) {
-		$return = ($val === null ? "<i>NULL</i>" : (preg_match("~char|binary~", $field["type"]) && !preg_match("~var~", $field["type"]) ? "<code>$val</code>" : $val));
+		$return = ($val === null ? "<i>NULL</i>" : (preg_match("~char|binary|boolean~", $field["type"]) && !preg_match("~var~", $field["type"]) ? "<code>$val</code>" : $val));
 		if (preg_match('~blob|bytea|raw|file~', $field["type"]) && !is_utf8($val)) {
 			$return = "<i>" . lang('%d byte(s)', strlen($original)) . "</i>";
 		}
@@ -305,7 +317,7 @@ class Adminer {
 	* @return null
 	*/
 	function tableStructurePrint($fields) {
-		echo "<table cellspacing='0'>\n";
+		echo "<table cellspacing='0' class='nowrap'>\n";
 		echo "<thead><tr><th>" . lang('Column') . "<td>" . lang('Type') . (support("comment") ? "<td>" . lang('Comment') : "") . "</thead>\n";
 		foreach ($fields as $field) {
 			echo "<tr" . odd() . "><th>" . h($field["field"]);
@@ -361,7 +373,7 @@ class Adminer {
 				" name='columns[$i][col]'",
 				$columns,
 				$val["col"],
-				($key !== ""  ? "selectFieldChange" : "selectAddRow")
+				($key !== "" ? "selectFieldChange" : "selectAddRow")
 			);
 			echo "<div>" . ($functions || $grouping ? "<select name='columns[$i][fun]'>"
 				. optionlist(array(-1 => "") + array_filter(array(lang('Functions') => $functions, lang('Aggregation') => $grouping)), $val["fun"]) . "</select>"
@@ -383,11 +395,11 @@ class Adminer {
 		print_fieldset("search", lang('Search'), $where);
 		foreach ($indexes as $i => $index) {
 			if ($index["type"] == "FULLTEXT") {
-				echo "(<i>" . implode("</i>, <i>", array_map('h', $index["columns"])) . "</i>) AGAINST";
+				echo "<div>(<i>" . implode("</i>, <i>", array_map('h', $index["columns"])) . "</i>) AGAINST";
 				echo " <input type='search' name='fulltext[$i]' value='" . h($_GET["fulltext"][$i]) . "'>";
 				echo script("qsl('input').oninput = selectFieldChange;", "");
 				echo checkbox("boolean[$i]", 1, isset($_GET["boolean"][$i]), "BOOL");
-				echo "<br>\n";
+				echo "</div>\n";
 			}
 		}
 		$_GET["where"] = (array) $_GET["where"];
@@ -541,6 +553,9 @@ class Adminer {
 			}
 		}
 		foreach ((array) $_GET["where"] as $val) {
+			if ($val["op"] == "") {
+				$val["op"] = "LIKE %%";
+			}
 			if ("$val[col]$val[val]" != "" && in_array($val["op"], $this->operators)) {
 				$cond = " $val[op]";
 				if (preg_match('~IN$~', $val["op"])) {
@@ -566,7 +581,7 @@ class Adminer {
 							&& (!preg_match("~[\x80-\xFF]~", $val["val"]) || $is_text)
 						) {
 							$name = idf_escape($name);
-							$cols[] = ($jush == "sql" && $is_text && !preg_match("~^utf8_~", $field["collation"]) ? "CONVERT($name USING " . charset($connection) . ")" : $name);
+							$cols[] = ($jush == "sql" && $is_text && !preg_match("~^utf8~", $field["collation"]) ? "CONVERT($name USING " . charset($connection) . ")" : $name);
 						}
 					}
 					$return[] = ($cols ? "(" . implode("$cond OR ", $cols) . "$cond)" : "0");
@@ -781,7 +796,7 @@ class Adminer {
 				}
 				$create = "CREATE TABLE " . table($table) . " (" . implode(", ", $fields) . ")";
 			} else {
-				$create = create_sql($table, $_POST["auto_increment"]);
+				$create = create_sql($table, $_POST["auto_increment"], $style);
 			}
 			set_utf8mb4($create);
 			if ($style && $create) {
@@ -896,6 +911,13 @@ class Adminer {
 		return $ext;
 	}
 
+	/** Set the path of the file for webserver load
+	* @return string path of the sql dump file
+	*/
+	function importServerPath() {
+		return "adminer.sql";
+	}
+
 	/** Print homepage
 	* @return bool whether to print default homepage
 	*/
@@ -919,7 +941,7 @@ class Adminer {
 		?>
 <h1>
 <?php echo $this->name(); ?> <span class="version"><?php echo $VERSION; ?></span>
-<a href="https://www.adminer.org/#download" target="_blank" id="version"><?php echo (version_compare($VERSION, $_COOKIE["adminer_version"]) < 0 ? h($_COOKIE["adminer_version"]) : ""); ?></a>
+<a href="https://www.adminer.org/#download"<?php echo target_blank(); ?> id="version"><?php echo (version_compare($VERSION, $_COOKIE["adminer_version"]) < 0 ? h($_COOKIE["adminer_version"]) : ""); ?></a>
 </h1>
 <?php
 		if ($missing == "auth") {
