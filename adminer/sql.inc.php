@@ -139,6 +139,7 @@ if (!$error && $_POST) {
 									$time = " <span class='time'>(" . format_time($start) . ")</span>"
 										. (strlen($q) < 1000 ? " <a href='" . h(ME) . "sql=" . urlencode(trim($q)) . ($_GET["table"] ? "&table=".$_GET["table"] : "") . "'>" . lang('Edit') . "</a>" : "") // 1000 - maximum length of encoded URL in IE is 2083 characters
 									;
+									$affected = $connection->affected_rows; // getting warnigns overwrites this
 									$warnings = ($_POST["only_errors"] ? "" : $driver->warnings());
 									$warnings_id = "warnings-$commands";
 									if ($warnings) {
@@ -179,7 +180,7 @@ if (!$error && $_POST) {
 											stop_session();
 										}
 										if (!$_POST["only_errors"]) {
-											echo "<p class='message' title='" . h($connection->info) . "'>" . lang('Query executed OK, %d row(s) affected.', $connection->affected_rows) . "$time\n";
+											echo "<p class='message' title='" . h($connection->info) . "'>" . lang('Query executed OK, %d row(s) affected.', $affected) . "$time\n";
 										}
 									}
 									echo ($warnings ? "<div id='$warnings_id' class='hidden'>\n$warnings</div>\n" : "");

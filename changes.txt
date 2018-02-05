@@ -31,7 +31,7 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.6.0-dev:
+Adminer 4.6.0 (released 2018-02-05):
 Fix counting selected rows after going back to select page
 PHP <5.3 compatibility even with Elasticsearch enabled
 Fully support functions in default values
