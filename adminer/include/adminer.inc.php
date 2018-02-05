@@ -239,15 +239,23 @@ class Adminer {
 
 	/** Query printed in select before execution
 	* @param string query to be executed
-	* @param string elapsed time
+	* @param float start time of the query
+	* @param bool
 	* @return string
 	*/
-	function selectQuery($query, $time) {
-		global $jush;
+	function selectQuery($query, $start, $failed = false) {
+		global $jush, $driver;
+		$return = "</p>\n"; // required for IE9 inline edit
+		if (!$failed && ($warnings = $driver->warnings())) {
+			$id = "warnings";
+			$return = ", <a href='#$id'>" . lang('Warnings') . "</a>" . script("qsl('a').onclick = partial(toggle, '$id');", "")
+				. "$return<div id='$id' class='hidden'>\n$warnings</div>\n"
+			;
+		}
 		$default_table = get_page_table();
-		return "<p><code class='jush-$jush'>" . h(str_replace("\n", " ", $query)) . "</code> <span class='time'>($time)</span>"
+		return "<p><code class='jush-$jush'>" . h(str_replace("\n", " ", $query)) . "</code> <span class='time'>(" . format_time($start) . ")</span>"
 			. (support("sql") ? " <a href='" . h(ME) . "sql=" . urlencode($query) . ($default_table ? "&table=".$default_table : "") . "'>" . lang('Edit') . "</a>" : "")
-			. "</p>" // </p> - required for IE9 inline edit
+			. $return
 		;
 	}
 
@@ -300,7 +308,7 @@ class Adminer {
 		if (preg_match('~json~', $field["type"])) {
 			$return = "<code class='jush-js'>$return</code>";
 		}
-		return ($link ? "<a href='" . h($link) . "'" . (is_url($link) ? " rel='noreferrer'" : "") . ">$return</a>" : $return);
+		return ($link ? "<a href='" . h($link) . "'" . (is_url($link) ? target_blank() : "") . ">$return</a>" : $return);
 	}
 
 	/** Value conversion used in select and edit
@@ -557,6 +565,7 @@ class Adminer {
 				$val["op"] = "LIKE %%";
 			}
 			if ("$val[col]$val[val]" != "" && in_array($val["op"], $this->operators)) {
+				$prefix = "";
 				$cond = " $val[op]";
 				if (preg_match('~IN$~', $val["op"])) {
 					$in = process_length($val["val"]);
@@ -567,11 +576,14 @@ class Adminer {
 					$cond = " LIKE " . $this->processInput($fields[$val["col"]], "%$val[val]%");
 				} elseif ($val["op"] == "ILIKE %%") {
 					$cond = " ILIKE " . $this->processInput($fields[$val["col"]], "%$val[val]%");
+				} elseif ($val["op"] == "FIND_IN_SET") {
+					$prefix = "$val[op](" . q($val["val"]) . ", ";
+					$cond = ")";
 				} elseif (!preg_match('~NULL$~', $val["op"])) {
 					$cond .= " " . $this->processInput($fields[$val["col"]], $val["val"]);
 				}
 				if ($val["col"] != "") {
-					$return[] = idf_escape($val["col"]) . $cond;
+					$return[] = $prefix . idf_escape($val["col"]) . $cond;
 				} else {
 					// find anywhere
 					$cols = array();
@@ -581,10 +593,10 @@ class Adminer {
 							&& (!preg_match("~[\x80-\xFF]~", $val["val"]) || $is_text)
 						) {
 							$name = idf_escape($name);
-							$cols[] = ($jush == "sql" && $is_text && !preg_match("~^utf8~", $field["collation"]) ? "CONVERT($name USING " . charset($connection) . ")" : $name);
+							$cols[] = $prefix . ($jush == "sql" && $is_text && !preg_match("~^utf8~", $field["collation"]) ? "CONVERT($name USING " . charset($connection) . ")" : $name) . $cond;
 						}
 					}
-					$return[] = ($cols ? "(" . implode("$cond OR ", $cols) . "$cond)" : "0");
+					$return[] = ($cols ? "(" . implode(" OR ", $cols) . ")" : "0");
 				}
 			}
 		}
@@ -647,24 +659,29 @@ class Adminer {
 	/** Query printed after execution in the message
 	* @param string executed query
 	* @param string elapsed time
+	* @param bool
 	* @return string
 	*/
-	function messageQuery($query, $time) {
-		global $jush;
+	function messageQuery($query, $time, $failed = false) {
+		global $jush, $driver;
 		restart_session();
 		$history = &get_session("queries");
 		$default_table = get_page_table();
 		if (!$history[$_GET["db"]]) {
 			$history[$_GET["db"]] = array();
 		}
-		$id = "sql-" . count($history[$_GET["db"]]);
 		if (strlen($query) > 1e6) {
 			$query = preg_replace('~[\x80-\xFF]+$~', '', substr($query, 0, 1e6)) . "\n..."; // [\x80-\xFF] - valid UTF-8, \n - can end by one-line comment
 		}
 		$history[$_GET["db"]][] = array($query, time(), $time); // not DB - $_GET["db"] is changed in database.inc.php //! respect $_GET["ns"]
+		$sql_id = "sql-" . count($history[$_GET["db"]]);
+		$return = "<a href='#$sql_id' class='toggle'>" . lang('SQL command') . "</a>\n";
+		if (!$failed && ($warnings = $driver->warnings())) {
+			$id = "warnings-" . count($history[$_GET["db"]]);
+			$return = "<a href='#$id' class='toggle'>" . lang('Warnings') . "</a>, $return<div id='$id' class='hidden'>\n$warnings</div>\n";
+		}
 		return " <span class='time'>" . @date("H:i:s") . "</span>" // @ - time zone may be not set
-			. " <a href='#$id' class='toggle'>" . lang('SQL command') . "</a>"
-			. "<div id='$id' class='hidden'><pre><code class='jush-$jush'>" . shorten_utf8($query, 1000) . '</code></pre>'
+			. " $return<div id='$sql_id' class='hidden'><pre><code class='jush-$jush'>" . shorten_utf8($query, 1000) . "</code></pre>"
 			. ($time ? " <span class='time'>($time)</span>" : '')
 			. (support("sql") ? '<p><a href="' . h(str_replace("db=" . urlencode(DB), "db=" . urlencode($_GET["db"]), ME) . 'sql=&history=' . (count($history[$_GET["db"]]) - 1)) . ($default_table ? "&table=".$default_table : "") . '">' . lang('Edit') . '</a>' : '')
 			. '</div>'
@@ -987,7 +1004,7 @@ class Adminer {
 					}
 				}
 				?>
-bodyLoad('<?php echo (is_object($connection) ? substr($connection->server_info, 0, 3) : ""); ?>');
+bodyLoad('<?php echo (is_object($connection) ? preg_replace('~^(\\d\\.?\\d).*~s', '\\1', $connection->server_info) : ""); ?>');
 </script>
 <?php
 			}
@@ -1021,10 +1038,10 @@ bodyLoad('<?php echo (is_object($connection) ? substr($connection->server_info, 
 <p id="dbs">
 <?php
 		hidden_fields_get();
-		$db_events = script("mixin(qsl('select'), {onmousedown: dbMouseDown, onchange: dbChange});", "");
-		echo "<span title='" . lang('database') . "'>DB</span>: " . ($databases
+		$db_events = script("mixin(qsl('select'), {onmousedown: dbMouseDown, onchange: dbChange});");
+		echo "<span title='" . lang('database') . "'>" . lang('DB') . "</span>: " . ($databases
 			? "<select name='db'>" . optionlist(array("" => "") + $databases, DB) . "</select>$db_events"
-			: '<input name="db" value="' . h(DB) . '" autocapitalize="off">'
+			: "<input name='db' value='" . h(DB) . "' autocapitalize='off'>\n"
 		);
 		echo "<input type='submit' value='" . lang('Use') . "'" . ($databases ? " class='hidden'" : "") . ">\n";
 		if ($missing != "db" && DB != "" && $connection->select_db(DB)) {

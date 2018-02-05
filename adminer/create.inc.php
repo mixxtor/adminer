@@ -151,7 +151,7 @@ if (!$_POST) {
 /*
 	$row = array(
 		"Engine" => $_COOKIE["adminer_engine"],
-		"fields" => array(array("field" => "", "type" => (isset($types["int"]) ? "int" : (isset($types["integer"]) ? "integer" : "")))),
+		"fields" => array(array("field" => "", "type" => (isset($types["int"]) ? "int" : (isset($types["integer"]) ? "integer" : "")), "on_update" => "")),
 		"partition_names" => array(""),
 	);
 
@@ -232,7 +232,7 @@ else
 <?php echo (support("comment")
 	? "<label><input type='checkbox' name='comments' value='1' class='jsonly'" . ($comments ? " checked" : "") . ">" . lang('Comment') . "</label>"
 		. script("qsl('input').onclick = function () { columnShow(this.checked, 6); toggle('Comment'); if (this.checked) this.form['Comment'].focus(); };")
-		. ' <input name="Comment" id="Comment" value="' . h($row["Comment"]) . '" maxlength="' . ($connection->server_info >= 5.5 ? 2048 : 60) . '"' . ($comments ? '' : ' class="hidden"') . '>'
+		. ' <input name="Comment" id="Comment" value="' . h($row["Comment"]) . '" maxlength="' . (min_version(5.5) ? 2048 : 60) . '"' . ($comments ? '' : ' class="hidden"') . '>'
 	: '')
 ; ?>
 <p>

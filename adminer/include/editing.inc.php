@@ -156,20 +156,21 @@ function textarea($name, $value, $rows = 10, $cols = 80) {
 * @param array
 * @param array or string if collations already exists on the page in element with this name
 * @param array returned by referencable_primary()
+* @param array extra types to prepend
 * @return null
 */
-function edit_type($key, $field, $collations, $foreign_keys = array()) {
+function edit_type($key, $field, $collations, $foreign_keys = array(), $extra_types = array()) {
 	global $structured_types, $types, $unsigned, $on_actions;
 	$type = $field["type"];
 	?>
 <td><select name="<?php echo h($key); ?>[type]" class="type" aria-labelledby="label-type"><?php
-if ($type && !isset($types[$type]) && !isset($foreign_keys[$type])) {
-	array_unshift($structured_types, $type);
+if ($type && !isset($types[$type]) && !isset($foreign_keys[$type]) && !in_array($type, $extra_types)) {
+	$extra_types[] = $type;
 }
 if ($foreign_keys) {
 	$structured_types[lang('Foreign keys')] = $foreign_keys;
 }
-echo optionlist($structured_types, $type);
+echo optionlist(array_merge($extra_types, $structured_types), $type);
 ?></select>
 <?php echo on_help("getTarget(event).value", 1); ?>
 <?php echo script("mixin(qsl('select'), {onfocus: function () { lastType = selectValue(this); }, onchange: editingTypeChange});", ""); ?>
@@ -225,12 +226,7 @@ function process_field($field, $type_field) {
 		idf_escape(trim($field["field"])),
 		process_type($type_field),
 		($field["null"] ? " NULL" : " NOT NULL"), // NULL for timestamp
-		(isset($default) ? " DEFAULT " . (
-			(preg_match('~time~', $field["type"]) && preg_match('~^CURRENT_TIMESTAMP(\(\))?$~i', $default))
-			|| ($jush == "sqlite" && preg_match('~^CURRENT_(TIME|TIMESTAMP|DATE)$~i', $default))
-			|| ($field["type"] == "bit" && preg_match("~^([0-9]+|b'[0-1]+')\$~", $default))
-			|| ($jush == "pgsql" && preg_match("~^[a-z]+\\(('[^']*')+\\)\$~", $default))
-			? $default : q($default)) : ""),
+		(isset($default) ? " DEFAULT " . (preg_match('~char|binary|text|enum|set~', $field["type"]) || preg_match('~^(?![a-z])~i', $default) ? q($default) : $default) : ""),
 		(preg_match('~timestamp|datetime~', $field["type"]) && $field["on_update"] ? " ON UPDATE $field[on_update]" : ""),
 		(support("comment") && $field["comment"] != "" ? " COMMENT " . q($field["comment"]) : ""),
 		($field["auto_increment"] ? auto_increment() : null),
@@ -263,7 +259,7 @@ function type_class($type) {
 * @return null
 */
 function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = array(), $comments = false) {
-	global $connection, $inout;
+	global $inout;
 	$fields = array_values($fields);
 	?>
 <thead><tr class="wrap">
@@ -302,7 +298,7 @@ function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = arra
 <td><?php echo checkbox("fields[$i][null]", 1, $field["null"], "", "", "block", "label-null"); ?>
 <td><label class="block"><input type="radio" name="auto_increment_col" value="<?php echo $i; ?>"<?php if ($field["auto_increment"]) { ?> checked<?php } ?> aria-labelledby="label-ai"><?php echo script("qsl('input').onclick = function () { var field = this.form['fields[' + this.value + '][field]']; if (!field.value) { field.value = 'id'; field.oninput(); } }"); ?></label><td><?php
 echo checkbox("fields[$i][has_default]", 1, $field["has_default"], "", "", "", "label-default"); ?><input name="fields[<?php echo $i; ?>][default]" value="<?php echo h($field["default"]); ?>" aria-labelledby="label-default"><?php echo script("qsl('input').oninput = function () { this.previousSibling.checked = true; }", ""); ?>
-<?php echo (support("comment") ? "<td" . ($comments ? "" : " class='hidden'") . "><input name='fields[$i][comment]' value='" . h($field["comment"]) . "' maxlength='" . ($connection->server_info >= 5.5 ? 1024 : 255) . "' aria-labelledby='label-comment'>" : ""); ?>
+<?php echo (support("comment") ? "<td" . ($comments ? "" : " class='hidden'") . "><input name='fields[$i][comment]' value='" . h($field["comment"]) . "' maxlength='" . (min_version(5.5) ? 1024 : 255) . "' aria-labelledby='label-comment'>" : ""); ?>
 <?php } ?>
 <?php
 		echo "<td>";
@@ -478,7 +474,7 @@ function create_trigger($on, $row) {
 * @return string
 */
 function create_routine($routine, $row) {
-	global $inout;
+	global $inout, $jush;
 	$set = array();
 	$fields = (array) $row["fields"];
 	ksort($fields); // enforce fields order
@@ -487,13 +483,13 @@ function create_routine($routine, $row) {
 			$set[] = (preg_match("~^($inout)\$~", $field["inout"]) ? "$field[inout] " : "") . idf_escape($field["field"]) . process_type($field, "CHARACTER SET");
 		}
 	}
+	$definition = rtrim("\n$row[definition]", ";");
 	return "CREATE $routine "
 		. idf_escape(trim($row["name"]))
 		. " (" . implode(", ", $set) . ")"
 		. (isset($_GET["function"]) ? " RETURNS" . process_type($row["returns"], "CHARACTER SET") : "")
 		. ($row["language"] ? " LANGUAGE $row[language]" : "")
-		. rtrim("\n$row[definition]", ";")
-		. ";"
+		. ($jush == "pgsql" ? " AS " . q($definition) : "$definition;")
 	;
 }
 
@@ -556,10 +552,11 @@ function ini_bytes($ini) {
 */
 function doc_link($paths) {
 	global $jush, $connection;
+	$version = preg_replace('~^(\\d\\.?\\d).*~s', '\\1', $connection->server_info);
 	$urls = array(
-		'sql' => "https://dev.mysql.com/doc/refman/" . substr($connection->server_info, 0, 3) . "/en/",
+		'sql' => "https://dev.mysql.com/doc/refman/$version/en/",
 		'sqlite' => "https://www.sqlite.org/",
-		'pgsql' => "https://www.postgresql.org/docs/" . substr($connection->server_info, 0, 3) . "/static/",
+		'pgsql' => "https://www.postgresql.org/docs/$version/static/",
 		'mssql' => "https://msdn.microsoft.com/library/",
 		'oracle' => "https://download.oracle.com/docs/cd/B19306_01/server.102/b14200/",
 	);

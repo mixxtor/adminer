@@ -89,6 +89,10 @@ if (isset($_GET["pgsql"])) {
 				}
 				return pg_fetch_result($result->_result, 0, $field);
 			}
+
+			function warnings() {
+				return h(pg_last_notice($this->_link)); // second parameter is available since PHP 7.1.0
+			}
 		}
 
 		class Min_Result {
@@ -143,6 +147,10 @@ if (isset($_GET["pgsql"])) {
 				return ($adminer->database() == $database);
 			}
 
+			function warnings() {
+				return ''; // not implemented in PDO_PgSQL as of PHP 7.2.1
+			}
+
 			function close() {
 			}
 		}
@@ -173,6 +181,10 @@ if (isset($_GET["pgsql"])) {
 			return true;
 		}
 
+		function warnings() {
+			return $this->_conn->warnings();
+		}
+
 	}
 
 
@@ -190,12 +202,12 @@ if (isset($_GET["pgsql"])) {
 		$connection = new Min_DB;
 		$credentials = $adminer->credentials();
 		if ($connection->connect($credentials[0], $credentials[1], $credentials[2])) {
-			if ($connection->server_info >= 9) {
+			if (min_version(9, 0, $connection)) {
 				$connection->query("SET application_name = 'Adminer'");
-				if ($connection->server_info >= 9.2) {
+				if (min_version(9.2, 0, $connection)) {
 					$structured_types[lang('Strings')][] = "json";
 					$types["json"] = 4294967295;
-					if ($connection->server_info >= 9.4) {
+					if (min_version(9.4, 0, $connection)) {
 						$structured_types[lang('Strings')][] = "jsonb";
 						$types["jsonb"] = 4294967295;
 					}
@@ -214,8 +226,11 @@ if (isset($_GET["pgsql"])) {
 		return " $query$where" . ($limit !== null ? $separator . "LIMIT $limit" . ($offset ? " OFFSET $offset" : "") : "");
 	}
 
-	function limit1($query, $where) {
-		return " $query$where";
+	function limit1($table, $query, $where, $separator = "\n") {
+		return (preg_match('~^INTO~', $query)
+			? limit($query, $where, 1, 0, $separator)
+			: " $query WHERE ctid = (SELECT ctid FROM " . table($table) . $where . $separator . "LIMIT 1)"
+		);
 	}
 
 	function db_collation($db, $collations) {
@@ -252,7 +267,7 @@ ORDER BY 1";
 
 	function table_status($name = "") {
 		$return = array();
-		foreach (get_rows("SELECT c.relname AS \"Name\", CASE c.relkind WHEN 'r' THEN 'table' WHEN 'm' THEN 'materialized view' ELSE 'view' END AS \"Engine\", pg_relation_size(c.oid) AS \"Data_length\", pg_total_relation_size(c.oid) - pg_relation_size(c.oid) AS \"Index_length\", obj_description(c.oid, 'pg_class') AS \"Comment\", c.relhasoids::int AS \"Oid\", c.reltuples as \"Rows\", n.nspname
+		foreach (get_rows("SELECT c.relname AS \"Name\", CASE c.relkind WHEN 'r' THEN 'table' WHEN 'm' THEN 'materialized view' ELSE 'view' END AS \"Engine\", pg_relation_size(c.oid) AS \"Data_length\", pg_total_relation_size(c.oid) - pg_relation_size(c.oid) AS \"Index_length\", obj_description(c.oid, 'pg_class') AS \"Comment\", CASE WHEN c.relhasoids THEN 'oid' ELSE '' END AS \"Oid\", c.reltuples as \"Rows\", n.nspname
 FROM pg_class c
 JOIN pg_namespace n ON(n.nspname = current_schema() AND n.oid = c.relnamespace)
 WHERE relkind IN ('r', 'm', 'v', 'f')
@@ -360,7 +375,9 @@ ORDER BY conkey, conname") as $row) {
 
 	function view($name) {
 		global $connection;
-		return array("select" => trim($connection->result("SELECT pg_get_viewdef(" . q($name) . ")")));
+		return array("select" => trim($connection->result("SELECT view_definition
+FROM information_schema.views
+WHERE table_schema = current_schema() AND table_name = " . q($name))));
 	}
 
 	function collations() {
@@ -541,30 +558,36 @@ ORDER BY conkey, conname") as $row) {
 		);
 	}
 
-	/*
 	function routine($name, $type) {
-		//! there can be more functions with the same name differing only in parameters, it must be also passed to DROP FUNCTION
-		//! no procedures, only functions
-		//! different syntax of CREATE FUNCTION
-		$rows = get_rows('SELECT pg_catalog.format_type(p.prorettype, NULL) AS "returns", p.prosrc AS "definition"
-FROM pg_catalog.pg_namespace n
-JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid
-WHERE n.nspname = current_schema() AND p.proname = ' . q($name));
-		$rows[0]["fields"] = array(); //!
-		return $rows[0];
+		$rows = get_rows('SELECT routine_definition AS definition, LOWER(external_language) AS language, *
+FROM information_schema.routines
+WHERE routine_schema = current_schema() AND specific_name = ' . q($name));
+		$return = $rows[0];
+		$return["returns"] = array("type" => $return["type_udt_name"]);
+		$return["fields"] = get_rows('SELECT parameter_name AS field, data_type AS type, character_maximum_length AS length, parameter_mode AS inout
+FROM information_schema.parameters
+WHERE specific_schema = current_schema() AND specific_name = ' . q($name) . '
+ORDER BY ordinal_position');
+		return $return;
 	}
-	*/
 
 	function routines() {
-		return get_rows('SELECT p.proname AS "ROUTINE_NAME", p.proargtypes AS "ROUTINE_TYPE", pg_catalog.format_type(p.prorettype, NULL) AS "DTD_IDENTIFIER"
-FROM pg_catalog.pg_namespace n
-JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid
-WHERE n.nspname = current_schema()
-ORDER BY p.proname');
+		return get_rows('SELECT specific_name AS "SPECIFIC_NAME", routine_type AS "ROUTINE_TYPE", routine_name AS "ROUTINE_NAME", type_udt_name AS "DTD_IDENTIFIER"
+FROM information_schema.routines
+WHERE routine_schema = current_schema()
+ORDER BY SPECIFIC_NAME');
 	}
 
 	function routine_languages() {
-		return get_vals("SELECT langname FROM pg_catalog.pg_language");
+		return get_vals("SELECT LOWER(lanname) FROM pg_catalog.pg_language");
+	}
+
+	function routine_id($name, $row) {
+		$return = array();
+		foreach ($row["fields"] as $field) {
+			$return[] = $field["type"];
+		}
+		return idf_escape($name) . "(" . implode(", ", $return) . ")";
 	}
 
 	function last_id() {
@@ -713,8 +736,7 @@ AND typelem = 0"
 	}
 
 	function process_list() {
-		global $connection;
-		return get_rows("SELECT * FROM pg_stat_activity ORDER BY " . ($connection->server_info < 9.2 ? "procpid" : "pid"));
+		return get_rows("SELECT * FROM pg_stat_activity ORDER BY " . (min_version(9.2) ? "pid" : "procpid"));
 	}
 
 	function show_status() {
@@ -728,8 +750,7 @@ AND typelem = 0"
 	}
 
 	function support($feature) {
-		global $connection;
-		return preg_match('~^(database|table|columns|sql|indexes|comment|view|' . ($connection->server_info >= 9.3 ? 'materializedview|' : '') . 'scheme|processlist|sequence|trigger|type|variables|drop_col|kill|dump)$~', $feature); //! routine|
+		return preg_match('~^(database|table|columns|sql|indexes|comment|view|' . (min_version(9.3) ? 'materializedview|' : '') . 'scheme|routine|processlist|sequence|trigger|type|variables|drop_col|kill|dump)$~', $feature);
 	}
 
 	function kill_process($val) {

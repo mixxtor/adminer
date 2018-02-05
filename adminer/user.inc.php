@@ -61,7 +61,7 @@ if ($_POST && !$error) {
 		$created = false;
 		if (!$error) {
 			if ($old_user != $new_user) {
-				$created = queries(($connection->server_info < 5 ? "GRANT USAGE ON *.* TO" : "CREATE USER") . " $new_user IDENTIFIED BY PASSWORD " . q($pass));
+				$created = queries((min_version(5) ? "CREATE USER" : "GRANT USAGE ON *.* TO") . " $new_user IDENTIFIED BY PASSWORD " . q($pass));
 				$error = !$created;
 			} elseif ($pass != $old_pass) {
 				queries("SET PASSWORD FOR $new_user = " . q($pass));
@@ -138,7 +138,7 @@ if ($_POST) {
 <table cellspacing="0">
 <tr><th><?php echo lang('Server'); ?><td><input name="host" maxlength="60" value="<?php echo h($row["host"]); ?>" autocapitalize="off">
 <tr><th><?php echo lang('Username'); ?><td><input name="user" maxlength="16" value="<?php echo h($row["user"]); ?>" autocapitalize="off">
-<tr><th><?php echo lang('Password'); ?><td><input name="pass" id="pass" value="<?php echo h($row["pass"]); ?>">
+<tr><th><?php echo lang('Password'); ?><td><input name="pass" id="pass" value="<?php echo h($row["pass"]); ?>" autocomplete="new-password">
 <?php if (!$row["hashed"]) { echo script("typePassword(qs('#pass'));"); } ?>
 <?php echo checkbox("hashed", 1, $row["hashed"], lang('Hashed'), "typePassword(this.form['pass'], this.checked);"); ?>
 </table>

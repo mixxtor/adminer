@@ -126,9 +126,6 @@ if (!$error && $_POST) {
 
 							do {
 								$result = $connection->store_result();
-								$time = " <span class='time'>(" . format_time($start) . ")</span>"
-								. (strlen($q) < 1000 ? " <a href='" . h(ME) . "sql=" . urlencode(trim($q)) . ($_GET["table"] ? "&table=".$_GET["table"] : "") . "'>" . lang('Edit') . "</a>" : "") // 1000 - maximum length of encoded URL in IE is 2083 characters
-								;
 
 								if ($connection->error) {
 									echo ($_POST["only_errors"] ? $print : "");
@@ -138,46 +135,58 @@ if (!$error && $_POST) {
 										break 2;
 									}
 
-								} elseif (is_object($result)) {
-									$limit = $_POST["limit"];
-									$orgtables = select($result, $connection2, array(), $limit);
-									if (!$_POST["only_errors"]) {
+								} else {
+									$time = " <span class='time'>(" . format_time($start) . ")</span>"
+										. (strlen($q) < 1000 ? " <a href='" . h(ME) . "sql=" . urlencode(trim($q)) . ($_GET["table"] ? "&table=".$_GET["table"] : "") . "'>" . lang('Edit') . "</a>" : "") // 1000 - maximum length of encoded URL in IE is 2083 characters
+									;
+									$warnings = ($_POST["only_errors"] ? "" : $driver->warnings());
+									$warnings_id = "warnings-$commands";
+									if ($warnings) {
+										$time .= ", <a href='#$warnings_id'>" . lang('Warnings') . "</a>" . script("qsl('a').onclick = partial(toggle, '$warnings_id');", "");
+									}
+									$explain = null;
+									$explain_id = "explain-$commands";
+									if (is_object($result)) {
+										$limit = $_POST["limit"];
+										$orgtables = select($result, $connection2, array(), $limit);
+										if (!$_POST["only_errors"]) {
 										$data_style = array('', 'TRUNCATE+INSERT', 'INSERT');
 										if ($jush == "sql") //! use insertUpdate() in all drivers
 											$data_style[] = 'INSERT+UPDATE';
 
-										echo "<form action='' method='post'>\n";
-										$num_rows = $result->num_rows;
-										echo "<p>" . ($num_rows ? ($limit && $num_rows > $limit ? lang('%d / ', $limit) : "") . lang('%d row(s)', $num_rows) : "");
-										echo $time;
-										$id = "export-$commands";
-										$export = ", <a href='#$id'>" . lang('Export') . "</a>" . script("qsl('a').onclick = partial(toggle, '$id');", "") . "<span id='$id' class='hidden'>: "
-											. html_select("output", $adminer->dumpOutput(), $adminer_export["output"]) . " "
-											. html_select("format", $dump_format, $adminer_export["format"])
+											echo "<form action='' method='post'>\n";
+											$num_rows = $result->num_rows;
+											echo "<p>" . ($num_rows ? ($limit && $num_rows > $limit ? lang('%d / ', $limit) : "") . lang('%d row(s)', $num_rows) : "");
+											echo $time;
+											if ($connection2 && preg_match("~^($space|\\()*+SELECT\\b~i", $q) && ($explain = explain($connection2, $q))) {
+												echo ", <a href='#$explain_id'>Explain</a>" . script("qsl('a').onclick = partial(toggle, '$explain_id');", "");
+											}
+											$id = "export-$commands";
+											echo ", <a href='#$id'>" . lang('Export') . "</a>" . script("qsl('a').onclick = partial(toggle, '$id');", "") . "<span id='$id' class='hidden'>: "
+												. html_select("output", $adminer->dumpOutput(), $adminer_export["output"]) . " "
+												. html_select("format", $dump_format, $adminer_export["format"])
 											. (isset($dump_format["sql"]) ? html_select("data_style", $data_style, "") : "")
-											. "<input type='hidden' name='query' value='" . h($q) . "'>"
-											. " <input type='submit' name='export' value='" . lang('Export') . "'><input type='hidden' name='token' value='$token'></span>\n"
-										;
-										if ($connection2 && preg_match("~^($space|\\()*+SELECT\\b~i", $q) && ($explain = explain($connection2, $q))) {
-											$id = "explain-$commands";
-											echo ", <a href='#$id'>EXPLAIN</a>" . script("qsl('a').onclick = partial(toggle, '$id');", "") . $export;
-											echo "<div id='$id' class='hidden'>\n";
-											select($explain, $connection2, $orgtables);
-											echo "</div>\n";
-										} else {
-											echo $export;
+												. "<input type='hidden' name='query' value='" . h($q) . "'>"
+												. " <input type='submit' name='export' value='" . lang('Export') . "'><input type='hidden' name='token' value='$token'></span>\n"
+												. "</form>\n"
+											;
 										}
-										echo "</form>\n";
-									}
 
-								} else {
-									if (preg_match("~^$space*+(CREATE|DROP|ALTER)$space++(DATABASE|SCHEMA)\\b~i", $q)) {
-										restart_session();
-										set_session("dbs", null); // clear cache
-										stop_session();
+									} else {
+										if (preg_match("~^$space*+(CREATE|DROP|ALTER)$space++(DATABASE|SCHEMA)\\b~i", $q)) {
+											restart_session();
+											set_session("dbs", null); // clear cache
+											stop_session();
+										}
+										if (!$_POST["only_errors"]) {
+											echo "<p class='message' title='" . h($connection->info) . "'>" . lang('Query executed OK, %d row(s) affected.', $connection->affected_rows) . "$time\n";
+										}
 									}
-									if (!$_POST["only_errors"]) {
-										echo "<p class='message' title='" . h($connection->info) . "'>" . lang('Query executed OK, %d row(s) affected.', $connection->affected_rows) . "$time\n";
+									echo ($warnings ? "<div id='$warnings_id' class='hidden'>\n$warnings</div>\n" : "");
+									if ($explain) {
+										echo "<div id='$explain_id' class='hidden'>\n";
+										select($explain, $connection2, $orgtables);
+										echo "</div>\n";
 									}
 								}
 

@@ -37,7 +37,7 @@
 		$start = microtime(true);
 		$return = $this->_conn->query($query);
 		if ($print) {
-			echo $adminer->selectQuery($query, format_time($start));
+			echo $adminer->selectQuery($query, $start, !$return);
 		}
 		return $return;
 	}
@@ -50,7 +50,7 @@
 	*/
 	function delete($table, $queryWhere, $limit = 0) {
 		$query = "FROM " . table($table);
-		return queries("DELETE" . ($limit ? limit1($query, $queryWhere) : " $query$queryWhere"));
+		return queries("DELETE" . ($limit ? limit1($table, $query, $queryWhere) : " $query$queryWhere"));
 	}
 
 	/** Update data in table
@@ -67,7 +67,7 @@
 			$values[] = "$key = $val";
 		}
 		$query = table($table) . " SET$separator" . implode(",$separator", $values);
-		return queries("UPDATE" . ($limit ? limit1($query, $queryWhere) : " $query$queryWhere"));
+		return queries("UPDATE" . ($limit ? limit1($table, $query, $queryWhere, $separator) : " $query$queryWhere"));
 	}
 
 	/** Insert data into table
@@ -99,12 +99,25 @@
 		return queries("BEGIN");
 	}
 
+	/** Commit transaction
+	* @return bool
+	*/
 	function commit() {
 		return queries("COMMIT");
 	}
 
+	/** Rollback transaction
+	* @return bool
+	*/
 	function rollback() {
 		return queries("ROLLBACK");
+	}
+	
+	/** Get warnings about the last command
+	* @return string HTML
+	*/
+	function warnings() {
+		return '';
 	}
 
 }

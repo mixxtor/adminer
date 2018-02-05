@@ -31,9 +31,25 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.5.1-dev:
+Adminer 4.6.0-dev:
 Fix counting selected rows after going back to select page
 PHP <5.3 compatibility even with Elasticsearch enabled
+Fully support functions in default values
+Stop redirecting links via adminer.org
+Support X-Forwarded-Prefix
+Display options for timestamp columns when creating a new table
+Disable autocompleting password on create user page
+Use primary key to edit rows even if not selected
+MySQL, PostgreSQL: Display warnings
+MySQL: Add floor and ceil select functions
+MySQL: Add FIND_IN_SET search operator
+MariaDB: Support JSON since MariaDB 10.2
+SQLite, PostgreSQL: Limit rows in data manipulation without unique key
+PostgreSQL: Support routines
+PostgreSQL: Allow editing views with uppercase letters (bug #467)
+PostgreSQL: Allow now() as default value (bug #525)
+SimpleDB: Document that allow_url_fopen is required
+Malay translation
 
 Adminer 4.5.0 (released 2018-01-24):
 Display name of the object in confirmation when dropping it
