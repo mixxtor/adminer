@@ -386,11 +386,15 @@ if (!$columns && support("table")) {
 					}
 					$unique_idf .= "&" . ($val !== null ? urlencode("where[" . bracket_escape($key) . "]") . "=" . urlencode($val) : "null%5B%5D=" . urlencode($key));
 				}
-				echo "<tr" . odd() . ">" . (!$group && $select ? "" : "<td>" . checkbox("check[]", substr($unique_idf, 1), in_array(substr($unique_idf, 1), (array) $_POST["check"]), "", "this.form['all'].checked = false; formUncheck('all-page');") . ($is_group || information_schema(DB) ? "" : " <a href='" . h(ME . "edit=" . urlencode($TABLE) . $unique_idf) . "'>" . lang('edit') . "</a>"));
+				echo "<tr" . odd() . ">" . (!$group && $select ? "" : "<td>"
+					. checkbox("check[]", substr($unique_idf, 1), in_array(substr($unique_idf, 1), (array) $_POST["check"]))
+					. ($is_group || information_schema(DB) ? "" : " <a href='" . h(ME . "edit=" . urlencode($TABLE) . $unique_idf) . "' class='edit'>" . lang('edit') . "</a>")
+				);
 
 				foreach ($row as $key => $val) {
 					if (isset($names[$key])) {
 						$field = $fields[$key];
+						$val = $driver->value($val, $field);
 						if ($val != "" && (!isset($email_fields[$key]) || $email_fields[$key] != "")) {
 							$email_fields[$key] = (is_mail($val) ? $names[$key] : ""); //! filled e-mails can be contained on other pages
 						}
@@ -439,8 +443,10 @@ if (!$columns && support("table")) {
 							echo "<td>" . ($text ? "<textarea name='$id' cols='30' rows='" . (substr_count($row[$key], "\n") + 1) . "'>$h_value</textarea>" : "<input name='$id' value='$h_value' size='$lengths[$key]'>");
 						} else {
 							$long = strpos($val, "<i>...</i>");
-							echo "<td id='$id'>$val</td>";
-							echo script("qsl('td').onclick = partialArg(selectClick, " . ($long ? 2 : ($text ? 1 : 0)) . ($editable ? "" : ", '" . h(lang('Use edit link to modify this value.')) . "'") . ");", "");
+							echo "<td id='$id' data-text='" . ($long ? 2 : ($text ? 1 : 0)) . "'"
+								. ($editable ? "" : " data-warning='" . h(lang('Use edit link to modify this value.')) . "'")
+								. ">$val</td>"
+							;
 						}
 					}
 				}
@@ -458,7 +464,9 @@ if (!$columns && support("table")) {
 			echo "</table>\n";
 		}
 
+		echo "<div class='footer'>\n";
 		if (($rows || $page) && !is_ajax()) {
+			echo "<p>\n";
 			$exact_count = true;
 			if ($_GET["page"] != "last") {
 				if ($limit == "" || (count($rows) < $limit && ($rows || !$page))) {
@@ -475,7 +483,6 @@ if (!$columns && support("table")) {
 			}
 
 			if ($limit != "" && ($found_rows === false || $found_rows > $limit || $page)) {
-				echo "<p class='pages'>";
 				// display first, previous 4, next 4 and last page
 				$max_page = ($found_rows === false
 					? $page + (count($rows) >= $limit ? 2 : 1)
@@ -506,9 +513,9 @@ if (!$columns && support("table")) {
 					echo ($page ? pagination($page, $page) : "");
 					echo ($max_page > $page ? pagination($page + 1, $page) . ($max_page > $page + 1 ? " ..." : "") : "");
 				}
+				echo "\n";
 			}
 
-			echo "<p class='count'>\n";
 			echo ($found_rows !== false ? "(" . ($exact_count ? "" : "~ ") . lang('%d row(s)', $found_rows) . ") " : "");
 			$display_rows = ($exact_count ? "" : "~ ") . $found_rows;
 			echo checkbox("all", 1, 0, lang('whole result'), "var checked = formChecked(this, /check/); selectCount('selected', this.checked ? '$display_rows' : checked); selectCount('selected2', this.checked || !checked ? '$display_rows' : checked);") . "\n";
@@ -559,8 +566,9 @@ if (!$columns && support("table")) {
 		}
 
 		$adminer->selectEmailPrint(array_filter($email_fields, 'strlen'), $columns);
+		echo "<input type='hidden' name='token' value='$token'>\n";
+		echo "</div>\n";
 
-		echo "<p><input type='hidden' name='token' value='$token'></p>\n";
 		echo "</form>\n";
 		echo (!$group && $select ? "" : script("tableCheck();"));
 	}

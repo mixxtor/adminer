@@ -113,11 +113,45 @@
 		return queries("ROLLBACK");
 	}
 	
+	/** Convert column to be searchable
+	* @param string escaped column name
+	* @param array array("op" => , "val" => )
+	* @param array
+	* @return string
+	*/
+	function convertSearch($idf, $val, $field) {
+		return $idf;
+	}
+
+	/** Convert value returned by database to actual value
+	* @param string
+	* @param array
+	* @return string
+	*/
+	function value($val, $field) {
+		return $val;
+	}
+
+	/** Quote binary string
+	* @param string
+	* @return string
+	*/
+	function quoteBinary($s) {
+		return q($s);
+	}
+	
 	/** Get warnings about the last command
 	* @return string HTML
 	*/
 	function warnings() {
 		return '';
+	}
+	
+	/** Get help link for table
+	* @param string
+	* @return string relative URL or null
+	*/
+	function tableHelp($name) {
 	}
 
 }

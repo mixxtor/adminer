@@ -58,6 +58,7 @@ mixin(document.body, {onkeydown: bodyKeydown, onclick: bodyClick<?php
 	?>});
 document.body.className = document.body.className.replace(/ nojs/, ' js');
 var offlineMessage = '<?php echo js_escape(lang('You are offline.')); ?>';
+var thousandsSeparator = '<?php echo js_escape(lang(',')); ?>';
 </script>
 
 <div id="help" class="jush-<?php echo $jush; ?> jsonly hidden"></div>
@@ -71,7 +72,8 @@ var offlineMessage = '<?php echo js_escape(lang('You are offline.')); ?>';
 		//echo '<p id="breadcrumb"><a href="' . h($link ? $link : ".") . '">' . $drivers[DRIVER] . '</a> &raquo; ';
 		echo '<p id="breadcrumb">' . $drivers[DRIVER] . ' &raquo; ';
 		$link = substr(preg_replace('~\b(db|ns)=[^&]*&~', '', ME), 0, -1);
-		$server = (SERVER != "" ? h(SERVER) : lang('Server'));
+		$server = $adminer->serverName(SERVER);
+		$server = ($server != "" ? $server : lang('Server'));
 		if ($breadcrumb === false) {
 			echo "$server\n";
 		} else {

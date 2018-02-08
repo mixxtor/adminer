@@ -172,9 +172,10 @@ function trCheck(el) {
 /** Fill number of selected items
 * @param string
 * @param string
+* @uses thousandsSeparator
 */
 function selectCount(id, count) {
-	setHtml(id, (count === '' ? '' : '(' + (count + '').replace(/\B(?=(\d{3})+$)/g, ' ') + ')'));
+	setHtml(id, (count === '' ? '' : '(' + (count + '').replace(/\B(?=(\d{3})+$)/g, thousandsSeparator) + ')'));
 	var el = qs('#' + id);
 	if (el) {
 		var inputs = qsa('input', el.parentNode.parentNode);
@@ -245,6 +246,13 @@ function formChecked(el, name) {
 * @param [boolean] force click
 */
 function tableClick(event, click) {
+	var td = parentTag(getTarget(event), 'td');
+	var text;
+	if (td && (text = td.getAttribute('data-text'))) {
+		if (selectClick.call(td, event, +text, td.getAttribute('data-warning'))) {
+			return;
+		}
+	}
 	click = (click || !window.getSelection || getSelection().isCollapsed);
 	var el = getTarget(event);
 	while (!isTag(el, 'tr') && !isTag(el, 'th')) {
@@ -267,6 +275,13 @@ function tableClick(event, click) {
 			el.checked = !el.checked;
 			el.onclick && el.onclick();
 		}
+	if (el.name == 'check[]') {
+		el.form['all'].checked = false;
+		formUncheck('all-page');
+	}
+	if (/^(tables|views)\[\]$/.test(el.name)) {
+		formUncheck('check-all');
+	}
 		trCheck(el);
 	}
 }
@@ -612,6 +627,7 @@ function fieldChange() {
 * @param [string]
 * @param [string]
 * @return XMLHttpRequest or false in case of an error
+* @uses offlineMessage
 */
 function ajax(url, callback, data, message) {
 	var request = (window.XMLHttpRequest ? new XMLHttpRequest() : (window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : false));
@@ -696,7 +712,8 @@ function ajaxForm(form, message, button) {
 /** Display edit field
 * @param MouseEvent
 * @param number display textarea instead of input, 2 - load long text
-* @param string warning to display
+* @param [string] warning to display
+* @return boolean
 * @this HTMLElement
 */
 function selectClick(event, text, warning) {
@@ -706,7 +723,8 @@ function selectClick(event, text, warning) {
 		return;
 	}
 	if (warning) {
-		return alert(warning);
+		alert(warning);
+		return true;
 	}
 	var original = td.innerHTML;
 	text = text || /\n/.test(original);
@@ -762,6 +780,7 @@ function selectClick(event, text, warning) {
 		range.moveEnd('character', -input.value.length + pos);
 		range.select();
 	}
+	return true;
 }
 
 

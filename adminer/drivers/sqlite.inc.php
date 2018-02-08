@@ -218,6 +218,15 @@ if (isset($_GET["sqlite"]) || isset($_GET["sqlite2"])) {
 			return queries("REPLACE INTO " . table($table) . " (" . implode(", ", array_keys(reset($rows))) . ") VALUES\n" . implode(",\n", $values));
 		}
 
+		function tableHelp($name) {
+			if ($name == "sqlite_sequence") {
+				return "fileformat2.html#seqtab";
+			}
+			if ($name == "sqlite_master") {
+				return "fileformat2.html#$name";
+			}
+		}
+
 	}
 
 
@@ -337,9 +346,9 @@ if (isset($_GET["sqlite"]) || isset($_GET["sqlite2"])) {
 		}
 		$return = array();
 		$sql = $connection2->result("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = " . q($table));
-		if (preg_match('~\bPRIMARY\s+KEY\s*\((([^)"]+|"[^"]*")++)~i', $sql, $match)) {
+		if (preg_match('~\bPRIMARY\s+KEY\s*\((([^)"]+|"[^"]*"|`[^`]*`)++)~i', $sql, $match)) {
 			$return[""] = array("type" => "PRIMARY", "columns" => array(), "lengths" => array(), "descs" => array());
-			preg_match_all('~((("[^"]*+")+)|(\S+))(\s+(ASC|DESC))?(,\s*|$)~i', $match[1], $matches, PREG_SET_ORDER);
+			preg_match_all('~((("[^"]*+")+|(?:`[^`]*+`)+)|(\S+))(\s+(ASC|DESC))?(,\s*|$)~i', $match[1], $matches, PREG_SET_ORDER);
 			foreach ($matches as $match) {
 				$return[""]["columns"][] = idf_unescape($match[2]) . $match[4];
 				$return[""]["descs"][] = (preg_match('~DESC~i', $match[5]) ? '1' : null);
@@ -507,6 +516,9 @@ if (isset($_GET["sqlite"]) || isset($_GET["sqlite2"])) {
 		if ($table != "") {
 			if (!$fields) {
 				foreach (fields($table) as $key => $field) {
+					if ($indexes) {
+						$field["auto_increment"] = 0;
+					}
 					$fields[] = process_field($field, $field);
 					$originals[$key] = idf_escape($key);
 				}
@@ -670,18 +682,6 @@ if (isset($_GET["sqlite"]) || isset($_GET["sqlite2"])) {
 			"Event" => array("INSERT", "UPDATE", "UPDATE OF", "DELETE"),
 			"Type" => array("FOR EACH ROW"),
 		);
-	}
-
-	function routine($name, $type) {
-		// not supported by SQLite
-	}
-
-	function routines() {
-		// not supported by SQLite
-	}
-
-	function routine_languages() {
-		// not supported by SQLite
 	}
 
 	function begin() {

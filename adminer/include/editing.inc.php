@@ -50,7 +50,10 @@ function select($result, $connection2 = null, $orgtables = array(), $limit = 0) 
 				}
 				$types[$j] = $field->type;
 				echo "<th" . ($orgtable != "" || $field->name != $orgname ? " title='" . h(($orgtable != "" ? "$orgtable." : "") . $orgname) . "'" : "") . ">" . h($name)
-					. ($orgtables ? doc_link(array('sql' => "explain-output.html#explain_" . strtolower($name))) : "")
+					. ($orgtables ? doc_link(array(
+						'sql' => "explain-output.html#explain_" . strtolower($name),
+						'mariadb' => "explain/#the-columns-in-explain-select",
+					)) : "")
 				;
 			}
 			echo "</thead>\n";
@@ -183,7 +186,7 @@ echo optionlist(array_merge($extra_types, $structured_types), $type);
 	if (is_string($collations)) {
 		echo "<script".nonce().">document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ var row_coll = document.getElementsByName('" . h($key) . "[collation]')[0]; row_coll.innerHTML = document.getElementsByName('".$collations."')[0].innerHTML; row_coll.setAttribute('value', '".$field["collation"]."'); }, 10); });</script>";
 	}
-	echo ($unsigned ? "<select name='" . h($key) . "[unsigned]'" . (!$type || preg_match('~((^|[^o])int|float|double|decimal)$~', $type) ? "" : " class='hidden'") . '><option>' . optionlist($unsigned, $field["unsigned"]) . '</select>' : '');
+	echo ($unsigned ? "<select name='" . h($key) . "[unsigned]'" . (!$type || preg_match(number_type(), $type) ? "" : " class='hidden'") . '><option>' . optionlist($unsigned, $field["unsigned"]) . '</select>' : '');
 	echo (isset($field['on_update']) ? "<select name='" . h($key) . "[on_update]'" . (preg_match('~timestamp|datetime~', $type) ? "" : " class='hidden'") . '>' . optionlist(array("" => "(" . lang('ON UPDATE') . ")", "CURRENT_TIMESTAMP"), $field["on_update"]) . '</select>' : '');
 	echo ($foreign_keys ? "<select name='" . h($key) . "[on_delete]'" . (preg_match("~`~", $type) ? "" : " class='hidden'") . "><option value=''>(" . lang('ON DELETE') . ")" . optionlist(explode("|", $on_actions), $field["on_delete"]) . "</select> " : " "); // space for IE
 }
@@ -209,7 +212,7 @@ function process_type($field, $collate = "COLLATE") {
 	global $unsigned;
 	return " $field[type]"
 		. process_length($field["length"])
-		. (preg_match('~(^|[^o])int|float|double|decimal~', $field["type"]) && in_array($field["unsigned"], $unsigned) ? " $field[unsigned]" : "")
+		. (preg_match(number_type(), $field["type"]) && in_array($field["unsigned"], $unsigned) ? " $field[unsigned]" : "")
 		. (preg_match('~char|text|enum|set~', $field["type"]) && $field["collation"] ? " $collate " . q($field["collation"]) : "")
 	;
 }
@@ -262,7 +265,7 @@ function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = arra
 	global $inout;
 	$fields = array_values($fields);
 	?>
-<thead><tr class="wrap">
+<thead><tr>
 <?php if ($type == "PROCEDURE") { ?><td>&nbsp;<?php } ?>
 <th id="label-name"><?php echo ($type == "TABLE" ? lang('Column name') : lang('Parameter name')); ?>
 <td id="label-type"><?php echo lang('Type'); ?><textarea id="enum-edit" rows="4" cols="12" wrap="off" style="display: none;"></textarea><?php echo script("qs('#enum-edit').onblur = editingLengthBlur;"); ?>
@@ -272,6 +275,7 @@ function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = arra
 <td id="label-null">NULL
 <td><input type="radio" name="auto_increment_col" value=""><acronym id="label-ai" title="<?php echo lang('Auto Increment'); ?>">AI</acronym><?php echo doc_link(array(
 	'sql' => "example-auto-increment.html",
+	'mariadb' => "auto_increment/",
 	'sqlite' => "autoinc.html",
 	'pgsql' => "datatype.html#DATATYPE-SERIAL",
 	'mssql' => "ms186775.aspx",
@@ -548,11 +552,13 @@ function ini_bytes($ini) {
 
 /** Create link to database documentation
 * @param array $jush => $path
+* @param string HTML code
 * @return string HTML code
 */
-function doc_link($paths) {
+function doc_link($paths, $text = "<sup>?</sup>") {
 	global $jush, $connection;
-	$version = preg_replace('~^(\\d\\.?\\d).*~s', '\\1', $connection->server_info);
+	$server_info = $connection->server_info;
+	$version = preg_replace('~^(\\d\\.?\\d).*~s', '\\1', $server_info); // two most significant digits
 	$urls = array(
 		'sql' => "https://dev.mysql.com/doc/refman/$version/en/",
 		'sqlite' => "https://www.sqlite.org/",
@@ -560,7 +566,11 @@ function doc_link($paths) {
 		'mssql' => "https://msdn.microsoft.com/library/",
 		'oracle' => "https://download.oracle.com/docs/cd/B19306_01/server.102/b14200/",
 	);
-	return ($paths[$jush] ? "<a href='$urls[$jush]$paths[$jush]'" . target_blank() . "><sup>?</sup></a>" : "");
+	if (preg_match('~MariaDB~', $server_info)) {
+		$urls['sql'] = "https://mariadb.com/kb/en/library/";
+		$paths['sql'] = (isset($paths['mariadb']) ? $paths['mariadb'] : str_replace(".html", "/", $paths['sql']));
+	}
+	return ($paths[$jush] ? "<a href='$urls[$jush]$paths[$jush]'" . target_blank() . ">$text</a>" : "");
 }
 
 /** Wrap gzencode() for usage in ob_start()

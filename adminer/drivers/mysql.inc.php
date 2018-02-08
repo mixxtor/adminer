@@ -14,17 +14,22 @@ if (!defined("DRIVER")) {
 			}
 
 			function connect($server = "", $username = "", $password = "", $database = null, $port = null, $socket = null) {
+				global $adminer;
 				mysqli_report(MYSQLI_REPORT_OFF); // stays between requests, not required since PHP 5.3.4
 
 				list($host, $port) = explode(":", $server, 2); // part after : is used for port or socket
-
+				$ssl = $adminer->connectSsl();
+				if ($ssl) {
+					$this->ssl_set($ssl['key'], $ssl['cert'], $ssl['ca'], '', '');
+				}
 				$return = @$this->real_connect(
 					($server != "" ? $host : ini_get("mysqli.default_host")),
 					($server . $username != "" ? $username : ini_get("mysqli.default_user")),
 					($server . $username . $password != "" ? $password : ini_get("mysqli.default_pw")),
 					$database,
 					(is_numeric($port) ? $port : ini_get("mysqli.default_port")),
-					(!is_numeric($port) ? $port : $socket)
+					(!is_numeric($port) ? $port : $socket),
+					($ssl ? 64 : 0) // 64 - MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT (not available before PHP 5.6.16)
 				);
 				return $return;
 			}
@@ -225,7 +230,22 @@ if (!defined("DRIVER")) {
 			var $extension = "PDO_MySQL";
 
 			function connect($server, $username, $password) {
-				$this->dsn("mysql:charset=utf8;host=" . str_replace(":", ";unix_socket=", preg_replace('~:(\\d)~', ';port=\\1', $server)), $username, $password);
+				global $adminer;
+				$options = array();
+				$ssl = $adminer->connectSsl();
+				if ($ssl) {
+					$options = array(
+						PDO::MYSQL_ATTR_SSL_KEY => $ssl['key'],
+						PDO::MYSQL_ATTR_SSL_CERT => $ssl['cert'],
+						PDO::MYSQL_ATTR_SSL_CA => $ssl['ca'],
+					);
+				}
+				$this->dsn(
+					"mysql:charset=utf8;host=" . str_replace(":", ";unix_socket=", preg_replace('~:(\\d)~', ';port=\\1', $server)),
+					$username,
+					$password,
+					$options
+				);
 				return true;
 			}
 
@@ -279,12 +299,29 @@ if (!defined("DRIVER")) {
 			return queries($prefix . implode(",\n", $values) . $suffix);
 		}
 		
+		function convertSearch($idf, $val, $field) {
+			return (preg_match('~char|text|enum|set~', $field["type"]) && !preg_match("~^utf8~", $field["collation"])
+				? "CONVERT($idf USING " . charset($this->_conn) . ")"
+				: $idf
+			);
+		}
+		
 		function warnings() {
 			$result = $this->_conn->query("SHOW WARNINGS");
 			if ($result && $result->num_rows) {
 				ob_start();
 				select($result); // select() usually needs to print a big table progressively
 				return ob_get_clean();
+			}
+		}
+
+		function tableHelp($name) {
+			$maria = preg_match('~MariaDB~', $this->_conn->server_info);
+			if (information_schema(DB)) {
+				return strtolower(($maria ? "information-schema-$name-table/" : str_replace("_", "-", $name) . "-table.html"));
+			}
+			if (DB == "mysql") {
+				return ($maria ? "mysql$name-table/" : "system-database.html"); //! more precise link
 			}
 		}
 
@@ -1059,7 +1096,7 @@ if (!defined("DRIVER")) {
 			$return = "CONV($return, 2, 10) + 0";
 		}
 		if (preg_match("~geometry|point|linestring|polygon~", $field["type"])) {
-			$return = "GeomFromText($return)";
+			$return = (min_version(8) ? "ST_" : "") . "GeomFromText($return)";
 		}
 		return $return;
 	}
@@ -1109,7 +1146,7 @@ if (!defined("DRIVER")) {
 			"binary" => "md5/sha1/uuid",
 			"date|time" => "now",
 		), array(
-			"(^|[^o])int|float|double|decimal" => "+/-", // not point
+			number_type() => "+/-",
 			"date" => "+ interval/- interval",
 			"time" => "addtime/subtime",
 			"char|text" => "concat",

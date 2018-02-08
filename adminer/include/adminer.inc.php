@@ -19,6 +19,12 @@ class Adminer {
 		return array(SERVER, $_GET["username"], get_password());
 	}
 
+	/** Get SSL connection options
+	* @return array array("key" => filename, "cert" => filename, "ca" => filename) or null
+	*/
+	function connectSsl() {
+	}
+
 	/** Get key used for permanent login
 	* @param bool
 	* @return string cryptic string which gets combined with password or false in case of an error
@@ -32,6 +38,14 @@ class Adminer {
 	*/
 	function bruteForceKey() {
 		return $_SERVER["REMOTE_ADDR"];
+	}
+	
+	/** Get server name displayed in breadcrumbs
+	* @param string
+	* @return string HTML code or null
+	*/
+	function serverName($server) {
+		return h($server);
 	}
 
 	/** Identifier of selected database
@@ -187,6 +201,7 @@ class Adminer {
 	* @return null
 	*/
 	function selectLinks($tableStatus, $set = "") {
+		global $jush, $driver;
 		echo '<p class="links">';
 		$links = array("select" => lang('Select data'));
 		if (support("table") || support("indexes")) {
@@ -202,13 +217,14 @@ class Adminer {
 		if ($set !== null) {
 			$links["edit"] = lang('New item');
 		}
+		$name = $tableStatus["Name"];
 		foreach ($links as $key => $val) {
 			$is_bold = isset($_GET[$key]) && !isset($_GET["sql"]);
 			if (($key == "edit") && (!empty($_GET["where"]) || !empty($_POST["check"])))	// multiple rows edit has $_POST["check"]
 				$is_bold = false;
-			echo " <a href='" . h(ME) . "$key=" . urlencode($tableStatus["Name"]) . ($key == "edit" ? $set : "") . "'" . bold($is_bold) . ">$val</a>";
+			echo " <a href='" . h(ME) . "$key=" . urlencode($name) . ($key == "edit" ? $set : "") . "'" . bold($is_bold) . ">$val</a>";
 		}
-		echo " <a href='" . h(ME) . "sql=&table=" . urlencode($tableStatus["Name"])."'" . bold(isset($_GET["sql"])) . ">".lang('SQL command')."</a>";
+		echo doc_link(array($jush => $driver->tableHelp($name)), "?");
 		echo "\n";
 	}
 
@@ -410,11 +426,8 @@ class Adminer {
 				echo "</div>\n";
 			}
 		}
-		$_GET["where"] = (array) $_GET["where"];
-		reset($_GET["where"]);
 		$change_next = "this.parentNode.firstChild.onchange();";
-		for ($i = 0; $i <= count($_GET["where"]); $i++) {
-			list(, $val) = each($_GET["where"]);
+		foreach (array_merge((array) $_GET["where"], array(array())) as $i => $val) {
 			if (!$val || ("$val[col]$val[val]" != "" && in_array($val["op"], $this->operators))) {
 				echo "<div>" . select_input(
 					" name='where[$i][col]'",
@@ -553,17 +566,14 @@ class Adminer {
 	* @return array expressions to join by AND
 	*/
 	function selectSearchProcess($fields, $indexes) {
-		global $connection, $jush;
+		global $connection, $driver;
 		$return = array();
 		foreach ($indexes as $i => $index) {
 			if ($index["type"] == "FULLTEXT" && $_GET["fulltext"][$i] != "") {
 				$return[] = "MATCH (" . implode(", ", array_map('idf_escape', $index["columns"])) . ") AGAINST (" . q($_GET["fulltext"][$i]) . (isset($_GET["boolean"][$i]) ? " IN BOOLEAN MODE" : "") . ")";
 			}
 		}
-		foreach ((array) $_GET["where"] as $val) {
-			if ($val["op"] == "") {
-				$val["op"] = "LIKE %%";
-			}
+		foreach ((array) $_GET["where"] as $key => $val) {
 			if ("$val[col]$val[val]" != "" && in_array($val["op"], $this->operators)) {
 				$prefix = "";
 				$cond = " $val[op]";
@@ -583,20 +593,18 @@ class Adminer {
 					$cond .= " " . $this->processInput($fields[$val["col"]], $val["val"]);
 				}
 				if ($val["col"] != "") {
-					$return[] = $prefix . idf_escape($val["col"]) . $cond;
+					$return[] = $prefix . $driver->convertSearch(idf_escape($val["col"]), $val, $fields[$val["col"]]) . $cond;
 				} else {
 					// find anywhere
 					$cols = array();
 					foreach ($fields as $name => $field) {
-						$is_text = preg_match('~char|text|enum|set~', $field["type"]);
-						if ((is_numeric($val["val"]) || !preg_match('~(^|[^o])int|float|double|decimal|bit~', $field["type"]))
-							&& (!preg_match("~[\x80-\xFF]~", $val["val"]) || $is_text)
+						if ((is_numeric($val["val"]) || !preg_match('~' . number_type() . '|bit~', $field["type"]))
+							&& (!preg_match("~[\x80-\xFF]~", $val["val"]) || preg_match('~char|text|enum|set~', $field["type"]))
 						) {
-							$name = idf_escape($name);
-							$cols[] = $prefix . ($jush == "sql" && $is_text && !preg_match("~^utf8~", $field["collation"]) ? "CONVERT($name USING " . charset($connection) . ")" : $name) . $cond;
+							$cols[] = $prefix . $driver->convertSearch(idf_escape($name), $val, $field) . $cond;
 						}
 					}
-					$return[] = ($cols ? "(" . implode(" OR ", $cols) . ")" : "0");
+					$return[] = ($cols ? "(" . implode(" OR ", $cols) . ")" : "1 = 0");
 				}
 			}
 		}
@@ -877,7 +885,7 @@ class Adminer {
 							if ($field["auto_increment"] && ($style == "INSERT-AI"))
 								$val = null;
 							$row[$key] = ($val !== null
-								? unconvert_field($field, preg_match('~(^|[^o])int|float|double|decimal~', $field["type"]) && $val != '' ? $val : q($val))
+								? unconvert_field($field, preg_match(number_type(), $field["type"]) && $val != '' ? $val : q($val))
 								: "NULL"
 							);
 						}
@@ -973,7 +981,7 @@ class Adminer {
 							}
 							$dbs = $_SESSION["db"][$vendor][$server][$username];
 							foreach (($dbs ? array_keys($dbs) : array("")) as $db) {
-								echo "<a href='" . h(auth_url($vendor, $server, $username, $db)) . "'>($drivers[$vendor]) " . h($username . ($server != "" ? "@$server" : "") . ($db != "" ? " - $db" : "")) . "</a><br>\n";
+								echo "<a href='" . h(auth_url($vendor, $server, $username, $db)) . "'>($drivers[$vendor]) " . h($username . ($server != "" ? "@" . $this->serverName($server) : "") . ($db != "" ? " - $db" : "")) . "</a><br>\n";
 							}
 						}
 					}
@@ -1067,14 +1075,16 @@ bodyLoad('<?php echo (is_object($connection) ? preg_replace('~^(\\d\\.?\\d).*~s'
 	function tablesPrint($tables) {
 		echo "<ul id='tables'>" . script("mixin(qs('#tables'), {onmouseover: menuOver, onmouseout: menuOut});");
 		foreach ($tables as $table => $status) {
-			echo '<li><a href="' . h(ME) . 'select=' . urlencode($table) . '"' . bold($_GET["select"] == $table || $_GET["edit"] == $table, "select") . ">" . lang('select') . "</a> ";
 			$name = $this->tableName($status);
-			echo (support("table") || support("indexes")
-				? '<a href="' . h(ME) . 'table=' . urlencode($table) . '"'
-					. bold(in_array($table, array($_GET["table"], $_GET["create"], $_GET["indexes"], $_GET["foreign"], $_GET["trigger"])), (is_view($status) ? "view" : "structure"))
-					. " title='" . lang('Show structure') . "'>$name</a>"
-				: "<span>$name</span>"
-			) . "\n";
+			if ($name != "") {
+				echo '<li><a href="' . h(ME) . 'select=' . urlencode($table) . '"' . bold($_GET["select"] == $table || $_GET["edit"] == $table, "select") . ">" . lang('select') . "</a> ";
+				echo (support("table") || support("indexes")
+					? '<a href="' . h(ME) . 'table=' . urlencode($table) . '"'
+						. bold(in_array($table, array($_GET["table"], $_GET["create"], $_GET["indexes"], $_GET["foreign"], $_GET["trigger"])), (is_view($status) ? "view" : "structure"))
+						. " title='" . lang('Show structure') . "'>$name</a>"
+					: "<span>$name</span>"
+				) . "\n";
+			}
 		}
 		echo "</ul>\n";
 	}

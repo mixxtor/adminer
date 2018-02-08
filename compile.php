@@ -27,7 +27,7 @@ function remove_lang($match) {
 	$idf = strtr($match[2], array("\\'" => "'", "\\\\" => "\\"));
 	$s = ($translations[$idf] ? $translations[$idf] : $idf);
 	if ($match[3] == ",") { // lang() has parameters
-		return "$match[1]" . (is_array($s) ? "lang(array('" . implode("', '", array_map('add_apo_slashes', $s)) . "')," : "sprintf('" . add_apo_slashes($s) . "',");
+		return $match[1] . (is_array($s) ? "lang(array('" . implode("', '", array_map('add_apo_slashes', $s)) . "')," : "sprintf('" . add_apo_slashes($s) . "',");
 	}
 	return ($match[1] && $match[4] ? $s : "$match[1]'" . add_apo_slashes($s) . "'$match[4]");
 }
@@ -310,6 +310,10 @@ function min_version() {
 	return true;
 }
 
+function number_type() {
+	return '';
+}
+
 $project = "adminer";
 if ($_SERVER["argv"][1] == "editor") {
 	$project = "editor";
@@ -338,7 +342,7 @@ if ($_SERVER["argv"][1]) {
 
 // check function definition in drivers
 $file = file_get_contents(dirname(__FILE__) . "/adminer/drivers/mysql.inc.php");
-$file = preg_replace('~( *)class Min_Driver.*}~sU', '', $file);
+$file = preg_replace('~class Min_Driver.*\n\t}~sU', '', $file);
 preg_match_all('~\\bfunction ([^(]+)~', $file, $matches); //! respect context (extension, class)
 $functions = array_combine($matches[1], $matches[0]);
 //! do not warn about functions without declared support()

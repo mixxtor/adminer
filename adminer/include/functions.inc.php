@@ -16,6 +16,14 @@ function adminer() {
 	return $adminer;
 }
 
+/** Get Adminer version
+* @return string
+*/
+function version() {
+	global $VERSION;
+	return $VERSION;
+}
+
 /** Unescape database identifier
 * @param string text inside ``
 * @return string
@@ -39,6 +47,13 @@ function escape_string($val) {
 */
 function number($val) {
 	return preg_replace('~[^0-9]+~', '', $val);
+}
+
+/** Get regular expression to match numeric types
+* @return string
+*/
+function number_type() {
+	return '((?<!o)int(?!er)|numeric|real|float|double|decimal|money)'; // not point, not interval
 }
 
 /** Disable magic_quotes_gpc
@@ -996,7 +1011,7 @@ function input($field, $value, $function, $field_group_idx = null) {
 			}
 			// type='date' and type='time' display localized value which may be confusing, type='datetime' uses 'T' as date and time separator
 			echo "<input"
-				. ((!$has_function || $function === "") && preg_match('~(?<!o)int~', $field["type"]) && !preg_match('~\[\]~', $field["full_type"]) ? " type='number'" : "")
+				. ((!$has_function || $function === "") && preg_match('~(?<!o)int(?!er)~', $field["type"]) && !preg_match('~\[\]~', $field["full_type"]) ? " type='number'" : "")
 				. " value='" . h($value) . "'" . ($maxlength ? " data-maxlength='$maxlength'" : "")
 				. (preg_match('~char|binary~', $field["type"]) && $maxlength > 20 ? " size='40'" : "")
 				. "$attrs>"
@@ -1023,7 +1038,7 @@ function input($field, $value, $function, $field_group_idx = null) {
 * @return string or false to leave the original value
 */
 function process_input($field, $group_id = null) {
-	global $adminer;
+	global $adminer, $driver;
 	$idf = bracket_escape($field["field"]);
 	if (is_null($group_id)) {
 		$function = $_POST["function"][$idf];
@@ -1070,7 +1085,7 @@ function process_input($field, $group_id = null) {
 		if (!is_string($file)) {
 			return false; //! report errors
 		}
-		return q($file);
+		return $driver->quoteBinary($file);
 	}
 	return $adminer->processInput($field, $value, $function);
 }
@@ -1108,23 +1123,19 @@ function fields_from_edit() {
 function search_tables() {
 	global $adminer, $connection;
 	$_GET["where"][0]["val"] = $_POST["query"];
-	$found = false;
+	$sep = "<ul>\n";
 	foreach (table_status('', true) as $table => $table_status) {
 		$name = $adminer->tableName($table_status);
 		if (isset($table_status["Engine"]) && $name != "" && (!$_POST["tables"] || in_array($table, $_POST["tables"]))) {
 			$result = $connection->query("SELECT" . limit("1 FROM " . table($table), " WHERE " . implode(" AND ", $adminer->selectSearchProcess(fields($table), array())), 1));
 			if (!$result || $result->fetch_row()) {
-				if (!$found) {
-					echo "<ul>\n";
-					$found = true;
-				}
-				echo "<li>" . ($result
-					? "<a href='" . h(ME . "select=" . urlencode($table) . "&where[0][op]=" . urlencode($_GET["where"][0]["op"]) . "&where[0][val]=" . urlencode($_GET["where"][0]["val"])) . "'>$name</a>\n"
-					: "$name: <span class='error'>" . error() . "</span>\n");
+				$print = "<a href='" . h(ME . "select=" . urlencode($table) . "&where[0][op]=" . urlencode($_GET["where"][0]["op"]) . "&where[0][val]=" . urlencode($_GET["where"][0]["val"])) . "'>$name</a>";
+				echo "$sep<li>" . ($result ? $print : "<p class='error'>$print: " . error()) . "\n";
+				$sep = "";
 			}
 		}
 	}
-	echo ($found ? "</ul>" : "<p class='message'>" . lang('No tables.')) . "\n";
+	echo ($sep ? "<p class='message'>" . lang('No tables.') : "</ul>") . "\n";
 }
 
 /** Send headers for export

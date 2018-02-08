@@ -23,12 +23,13 @@ MySQL:
 Generated columns (MySQL >= 5.7.6)
 Data longer than max_allowed_packet can be sent by mysqli_stmt_send_long_data()
 
+MariaDB:
+Documentation links
+
 SQLite:
 Copy tables
 Delimiter in export and SQL command
 Backward keys in Editor
-Delete PRIMARY KEY from a table with auto increment
-"PRIMARY (`id`)" and "UNIQUE (id)" indexes shown for tables with auto increment
 
 PostgreSQL:
 Display number of schemas in databases overview

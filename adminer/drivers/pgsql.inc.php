@@ -37,7 +37,15 @@ if (isset($_GET["pgsql"])) {
 			}
 
 			function quote($string) {
-				return "'" . pg_escape_string($this->_link, $string) . "'"; //! bytea
+				return "'" . pg_escape_string($this->_link, $string) . "'";
+			}
+
+			function value($val, $field) {
+				return ($field["type"] == "bytea" ? pg_unescape_bytea($val) : $val);
+			}
+
+			function quoteBinary($string) {
+				return "'" . pg_escape_bytea($this->_link, $string) . "'";
 			}
 
 			function select_db($database) {
@@ -147,6 +155,14 @@ if (isset($_GET["pgsql"])) {
 				return ($adminer->database() == $database);
 			}
 
+			function value($val, $field) {
+				return $val;
+			}
+
+			function quoteBinary($s) {
+				return q($s);
+			}
+
 			function warnings() {
 				return ''; // not implemented in PDO_PgSQL as of PHP 7.2.1
 			}
@@ -181,8 +197,34 @@ if (isset($_GET["pgsql"])) {
 			return true;
 		}
 
+		function convertSearch($idf, $val, $field) {
+			return (preg_match('~char|text' . (is_numeric($val["val"]) && !preg_match('~LIKE~', $val["op"]) ? '|' . number_type() : '') . '~', $field["type"])
+				? $idf
+				: "CAST($idf AS text)"
+			);
+		}
+
+		function value($val, $field) {
+			return $this->_conn->value($val, $field);
+		}
+
+		function quoteBinary($s) {
+			return $this->_conn->quoteBinary($s);
+		}
+
 		function warnings() {
 			return $this->_conn->warnings();
+		}
+
+		function tableHelp($name) {
+			$links = array(
+				"information_schema" => "infoschema",
+				"pg_catalog" => "catalog",
+			);
+			$link = $links[$_GET["ns"]];
+			if ($link) {
+				return "$link-" . str_replace("_", "-", $name) . ".html";
+			}
 		}
 
 	}
@@ -716,6 +758,10 @@ AND typelem = 0"
 		return rtrim($return, ';');
 	}
 
+	function truncate_sql($table) {
+		return "TRUNCATE " . table($table);
+	}
+
 	function trigger_sql($table) {
 		$status = table_status($table);
 		$return = "";
@@ -789,7 +835,7 @@ AND typelem = 0"
 			"char" => "md5",
 			"date|time" => "now",
 		), array(
-			"int|numeric|real|money" => "+/-",
+			number_type() => "+/-",
 			"date|time" => "+ interval/- interval", //! escape
 			"char|text" => "||",
 		)

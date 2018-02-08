@@ -71,6 +71,7 @@ if ($adminer->homepage()) {
 				echo " <input type='submit' name='search' value='" . lang('Search') . "'>\n";
 				echo "</div></fieldset>\n";
 				if ($_POST["search"] && $_POST["query"] != "") {
+					$_GET["where"][0]["op"] = "LIKE %%";
 					search_tables();
 				}
 			}
@@ -81,11 +82,11 @@ if ($adminer->homepage()) {
 			echo '<td><input id="check-all" type="checkbox" class="jsonly">' . script("qs('#check-all').onclick = partial(formCheck, /^(tables|views)\[/);", "");
 			echo '<th>' . lang('Table');
 			echo '<td>' . lang('Engine') . doc_link(array('sql' => 'storage-engines.html'));
-			echo '<td>' . lang('Collation') . doc_link(array('sql' => 'charset-mysql.html'));
+			echo '<td>' . lang('Collation') . doc_link(array('sql' => 'charset-charsets.html', 'mariadb' => 'supported-character-sets-and-collations/'));
 			echo '<td>' . lang('Data Length') . $doc_link;
 			echo '<td>' . lang('Index Length') . $doc_link;
 			echo '<td>' . lang('Data Free') . $doc_link;
-			echo '<td>' . lang('Auto Increment') . doc_link(array('sql' => 'example-auto-increment.html'));
+			echo '<td>' . lang('Auto Increment') . doc_link(array('sql' => 'example-auto-increment.html', 'mariadb' => 'auto_increment/'));
 			echo '<td>' . lang('Rows') . $doc_link;
 			echo (support("comment") ? '<td>' . lang('Comment') . $doc_link : '');
 			echo "</thead>\n";
@@ -94,7 +95,7 @@ if ($adminer->homepage()) {
 			foreach ($tables_list as $name => $type) {
 				$view = ($type !== null && !preg_match('~table~i', $type));
 				$id = h("Table-" . $name);
-				echo '<tr' . odd() . '><td>' . checkbox(($view ? "views[]" : "tables[]"), $name, in_array($name, $tables_views, true), "", "formUncheck('check-all');", "", $id);
+				echo '<tr' . odd() . '><td>' . checkbox(($view ? "views[]" : "tables[]"), $name, in_array($name, $tables_views, true), "", "", "", $id);
 				echo '<th>' . (support("table") || support("indexes") ? "<a href='" . h(ME) . "table=" . urlencode($name) . "' title='" . lang('Show structure') . "' id='$id'>" . h($name) . '</a>' : h($name));
 				if ($view) {
 					echo '<td colspan="6"><a href="' . h(ME) . "view=" . urlencode($name) . '" title="' . lang('Alter view') . '">' . (preg_match('~materialized~i', $type) ? lang('Materialized view') : lang('View')) . '</a>';
@@ -129,6 +130,7 @@ if ($adminer->homepage()) {
 
 			echo "</table>\n";
 			if (!information_schema(DB)) {
+				echo "<div class='footer'>\n";
 				$vacuum = "<input type='submit' value='" . lang('Vacuum') . "'> " . on_help("'VACUUM'");
 				$optimize = "<input type='submit' name='optimize' value='" . lang('Optimize') . "'> " . on_help($jush == "sql" ? "'OPTIMIZE TABLE'" : "'VACUUM OPTIMIZE'");
 				echo "<fieldset><legend>" . lang('Selected') . " <span id='selected'></span></legend><div>"
@@ -153,6 +155,7 @@ if ($adminer->homepage()) {
 				echo script("qsl('input').onclick = function () { selectCount('selected', formChecked(this, /^(tables|views)\[/));" . (support("table") ? " selectCount('selected2', formChecked(this, /^tables\[/) || $tables);" : "") . " }");
 				echo "<input type='hidden' name='token' value='$token'>\n";
 				echo "</div></fieldset>\n";
+				echo "</div>\n";
 			}
 			echo "</form>\n";
 			echo script("tableCheck();");

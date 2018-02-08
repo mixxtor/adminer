@@ -46,7 +46,6 @@ foreach (process_list() as $i => $row) {
 }
 ?>
 </table>
-<?php echo script("tableCheck();"); ?>
 <p>
 <?php
 if (support("kill")) {
@@ -56,3 +55,4 @@ if (support("kill")) {
 ?>
 <input type="hidden" name="token" value="<?php echo $token; ?>">
 </form>
+<?php echo script("tableCheck();"); ?>
