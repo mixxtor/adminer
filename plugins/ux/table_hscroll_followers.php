@@ -73,7 +73,13 @@ class AdminerTableHScrollFollowers
 							while (el && (el = el[ directions[i].shift_attr ]))
 							{
 								if (el.tagName
-									&& (((i != "up_elements") && ((result_table.parentNode.tagName != "FORM") || (el.className.split(/\s+/).indexOf("pages") >= 0)))
+									&& (((i != "up_elements")
+											&& ((result_table.parentNode.tagName != "FORM")
+												|| (el.className.split(/\s+/).indexOf("pages") >= 0)
+												|| ((el.tagName == "P") && el.innerText.match(/\([^\(\)]+\)\s*$/g))	// Adminer >= 4.6.1 version of .pages
+												|| (el.className.split(/\s+/).indexOf("footer") >= 0)				// Adminer >= 4.6.1: sticky element broke, but "load more" button is much better!
+												)
+											)
 										|| (i == "up_elements")
 										)
 									&& (el.id != "breadcrumb")
@@ -86,6 +92,7 @@ class AdminerTableHScrollFollowers
 										el.myOriginalPosition = el.style.position;
 										el.style.position = "relative";
 									}
+
 									el.style.left = scrollLeft + "px";
 								}
 							}

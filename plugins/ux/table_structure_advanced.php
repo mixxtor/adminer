@@ -197,7 +197,33 @@ class AdminerTableStructureAdvanced
 						fieldset.innerHTML = fieldset_html;
 						form.appendChild(fieldset);
 
+						// restore confirmations
+						var initScript = document.createElement("SCRIPT");
+						initScript.nonce = '<?=nonce()?>'.replace(/^[^"]+"/, "").replace(/"$/, "");
+						var initScriptLines = [];
+						var inputs = fieldset.getElementsByTagName("INPUT");
+						var i, cnt = inputs.length;
+						for (i=0; i<cnt; i++)
+							if (inputs[i].type == "submit")
+							{
+								var next_script = inputs[i];
+								while (next_script && next_script.tagName != "SCRIPT")
+									next_script = next_script.nextSibling;
+								// We can have few scripts after each button (help + confirm)
+								while (next_script && (next_script.tagName == "SCRIPT"))
+								{
+									var input_id = "uxTableAction_ID"+inputs[i].name;
+									inputs[i].id = input_id;
+									var fixedInitScript = next_script.innerText.replace(/qsl\([^\)]+\)/, "qsl('#"+input_id+"')");
+									console.log(fixedInitScript);
+									initScriptLines.push( fixedInitScript );
+									next_script = next_script.nextSibling;
+								}
+							}
+
 						content.insertBefore(form, fieldset_anchor);
+						initScript.innerText = initScriptLines.join(";");
+						document.getElementsByTagName("BODY")[0].appendChild(initScript);
 					}
 				});
 <?php

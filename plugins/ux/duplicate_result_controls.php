@@ -41,15 +41,34 @@ class AdminerDuplicateResultControls
 					var pages_box = table_box;
 					while (pages_box && (!pages_box.className || (pages_box.className.split(/\s+/).indexOf("pages") < 0)))
 						pages_box = pages_box.nextSibling;
+					if (!pages_box)	// after 4.6.1 we use new method to find pages
+					{
+						var pages_box = table_box;
+						while (pages_box && (!pages_box.className || (pages_box.className.split(/\s+/).indexOf("footer") < 0)))
+							pages_box = pages_box.nextSibling;
+						if (pages_box)
+							pages_box = pages_box.getElementsByTagName("P")[0];
+					}
+
 					if (pages_box)
 					{
 						pages_box.style.position = "static";
 
 						var new_pages_box = pages_box.cloneNode(true)
+						// remove 'whole result' checkbox
+						var whole_result = new_pages_box.getElementsByTagName("INPUT");
+						if (whole_result.length && whole_result[0].name == "all")
+							new_pages_box.removeChild(whole_result[0].parentNode);
+
 						var a_list = new_pages_box.getElementsByTagName("A");
-						if (a_list[a_list.length-1].className.split(/\s+/).indexOf("loadmore") != -1)
-							new_pages_box.removeChild(a_list[a_list.length-1]);
-						a_list[0].onclick = function(){ pageClick(this.href, +prompt('Page', '1')); return false; };	// restore event handler
+						if (a_list.length)
+						{
+							// remove 'load more' link
+							if (a_list[a_list.length-1].className.split(/\s+/).indexOf("loadmore") != -1)
+								new_pages_box.removeChild(a_list[a_list.length-1]);
+							// restore event handler
+							a_list[0].onclick = function(){ pageClick(this.href, +prompt('Page', '1')); return false; };
+						}
 						new_pages_box = table_box.parentNode.insertBefore( new_pages_box, table_box );
 
 						// copy also rows number
@@ -91,20 +110,35 @@ class AdminerDuplicateResultControls
 								result_control_box = result_control_box.nextSibling;
 							if (result_control_box && result_control_box.getElementsByClassName("time").length)
 							{
+								// search DIV.#explain-1 (Adminer >= 4.6.1)
+								var explain_box = result_control_box;
+								while (explain_box && !explain_box.id || (explain_box.id && explain_box.id.indexOf("explain-")) !== 0)
+									explain_box = explain_box.nextSibling;
+
+								var explain_box_clone = null;
 								var controls_clone = result_control_box.cloneNode(true);
 								var i, els_list;
 
 								// replace ID for duplicates
-								els_list = controls_clone.getElementsByTagName("DIV");
-								for (i=0; i<els_list.length; i++)
-									if (els_list[i].id)
-										els_list[i].id = els_list[i].id.replace(/^(explain)-(\d+)$/, "$1-$2-2");
+								if (explain_box)
+								{
+									explain_box_clone = explain_box.cloneNode(true);
+									explain_box_clone.id = explain_box_clone.id.replace(/^(explain)-(\d+)$/, "$1-$2-2");
+								}
+								else
+								{
+									els_list = controls_clone.getElementsByTagName("DIV");
+									for (i=0; i<els_list.length; i++)
+										if (els_list[i].id)
+											els_list[i].id = els_list[i].id.replace(/^(explain)-(\d+)$/, "$1-$2-2");
+								}
 
 								els_list = controls_clone.getElementsByTagName("SPAN");
 								for (i=0; i<els_list.length; i++)
 									if (els_list[i].id)
 										els_list[i].id = els_list[i].id.replace(/^(export)-(\d+)$/, "$1-$2-2");
 
+								// fix onclick handlers
 								els_list = controls_clone.getElementsByTagName("A");
 								for (i=0; i<els_list.length; i++)
 									if (els_list[i].href)
@@ -121,6 +155,8 @@ class AdminerDuplicateResultControls
 
 								// collect new elements
 								cloned_controls.push([ controls_clone, table_box[j] ]);
+								if (explain_box_clone)
+									cloned_controls.push([ explain_box_clone, table_box[j] ]);
 							}
 						}
 

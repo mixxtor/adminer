@@ -39,7 +39,7 @@ class Adminer {
 	function bruteForceKey() {
 		return $_SERVER["REMOTE_ADDR"];
 	}
-	
+
 	/** Get server name displayed in breadcrumbs
 	* @param string
 	* @return string HTML code or null
@@ -224,6 +224,7 @@ class Adminer {
 				$is_bold = false;
 			echo " <a href='" . h(ME) . "$key=" . urlencode($name) . ($key == "edit" ? $set : "") . "'" . bold($is_bold) . ">$val</a>";
 		}
+		echo " <a href='" . h(ME) . "sql=&table=" . urlencode($name)."'" . bold(isset($_GET["sql"])) . ">".lang('SQL command')."</a>";
 		echo doc_link(array($jush => $driver->tableHelp($name)), "?");
 		echo "\n";
 	}
