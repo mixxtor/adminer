@@ -41,14 +41,6 @@ class AdminerDuplicateResultControls
 					var pages_box = table_box;
 					while (pages_box && (!pages_box.className || (pages_box.className.split(/\s+/).indexOf("pages") < 0)))
 						pages_box = pages_box.nextSibling;
-					if (!pages_box)	// after 4.6.1 we use new method to find pages
-					{
-						var pages_box = table_box;
-						while (pages_box && (!pages_box.className || (pages_box.className.split(/\s+/).indexOf("footer") < 0)))
-							pages_box = pages_box.nextSibling;
-						if (pages_box)
-							pages_box = pages_box.getElementsByTagName("P")[0];
-					}
 
 					if (pages_box)
 					{

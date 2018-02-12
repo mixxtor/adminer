@@ -76,8 +76,7 @@ class AdminerTableHScrollFollowers
 									&& (((i != "up_elements")
 											&& ((result_table.parentNode.tagName != "FORM")
 												|| (el.className.split(/\s+/).indexOf("pages") >= 0)
-												|| ((el.tagName == "P") && el.innerText.match(/\([^\(\)]+\)\s*$/g))	// Adminer >= 4.6.1 version of .pages
-												|| (el.className.split(/\s+/).indexOf("footer") >= 0)				// Adminer >= 4.6.1: sticky element broke, but "load more" button is much better!
+												|| (el.className.split(/\s+/).indexOf("footer") >= 0)				// Adminer >= 4.6.1: sticky element broke, but "load more" button work much better when it scroll to right also!
 												)
 											)
 										|| (i == "up_elements")

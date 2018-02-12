@@ -482,7 +482,7 @@ if (!$columns && support("table")) {
 				}
 
 				if ($limit != "" && ($found_rows === false || $found_rows > $limit || $page)) {
-					echo "<p>\n";
+					echo "<p class='pages'>\n";
 					// display first, previous 4, next 4 and last page
 					$max_page = ($found_rows === false
 						? $page + (count($rows) >= $limit ? 2 : 1)
@@ -516,7 +516,7 @@ if (!$columns && support("table")) {
 					echo "\n";
 				}
 			}
-			
+
 			echo "<div class='footer'><div>\n";
 			if ($rows || $page) {
 				echo "<fieldset>";
