@@ -31,9 +31,18 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.6.1-dev:
+Adminer 4.6.2-dev:
+Semi-transparent border on table actions
+Shorten JSON values in select (bug #594)
+Speed up alter table (regression from 4.4.0)
+PostgreSQL: Fix exporting string default values
+PostgreSQL: Fix exporting sequences in PostgreSQL 10
+PostgreSQL: Add IF EXISTS to DROP SEQUENCE in export (bug #595)
+
+Adminer 4.6.1 (released 2018-02-09):
 Sticky position of table actions
 Speed up rendering of long tables (regression from 4.4.0)
+Display notification about performing action after relogin
 Add system tables help links
 MySQL: Support non-utf8 charset in search in column
 MySQL: Support geometry in MySQL 8 (bug #574)

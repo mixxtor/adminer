@@ -2,8 +2,9 @@
 
 /** Load syntax highlighting
 * @param string first three characters of database system version
+* @param [boolean]
 */
-function bodyLoad(version) {
+function bodyLoad(version, maria) {
 	if (window.jush) {
 		jush.create_links = ' target="_blank" rel="noreferrer noopener"';
 		if (version) {
@@ -12,8 +13,14 @@ function bodyLoad(version) {
 				if (typeof obj[key] != 'string') {
 					obj = obj[key];
 					key = 0;
+					if (maria) {
+						for (var i = 1; i < obj.length; i++) {
+							obj[i] = obj[i].replace(/\.html/, '/');
+						}
+					}
 				}
 				obj[key] = obj[key]
+					.replace(/dev\.mysql\.com\/doc\/mysql\/en\//, (maria ? 'mariadb.com/kb/en/library/' : '$&')) // MariaDB
 					.replace(/\/doc\/mysql/, '/doc/refman/' + version) // MySQL
 					.replace(/\/docs\/current/, '/docs/' + version) // PostgreSQL
 				;
@@ -181,6 +188,52 @@ function idfEscape(s) {
 	return s.replace(/`/, '``');
 }
 
+
+
+/** Handle clicks on fields editing
+* @param MouseEvent
+* @return boolean false to cancel action
+*/
+function editingClick(event) {
+	var el = getTarget(event);
+	if (!isTag(el, 'input')) {
+		el = parentTag(target, 'label');
+		el = el && qs('input', el);
+	}
+	if (el) {
+		var name = el.name;
+		if (/^add\[/.test(name)) {
+			editingAddRow.call(el, 1);
+		} else if (/^up\[/.test(name)) {
+			editingMoveRow.call(el, 1);
+		} else if (/^down\[/.test(name)) {
+			editingMoveRow.call(el);
+		} else if (/^drop_col\[/.test(name)) {
+			editingRemoveRow.call(el, 'fields\$1[field]');
+		} else {
+			if (name == 'auto_increment_col') {
+				var field = el.form['fields[' + el.value + '][field]'];
+				if (!field.value) {
+					field.value = 'id';
+					field.oninput();
+				}
+			}
+			return;
+		}
+		return false;
+	}
+}
+
+/** Handle input on fields editing
+* @param InputEvent
+*/
+function editingInput(event) {
+	var el = getTarget(event);
+	if (/\[default\]$/.test(el.name)) {
+		 el.previousSibling.checked = true;
+	}
+}
+
 /** Detect foreign key
 * @this HTMLInputElement
 */
@@ -262,7 +315,7 @@ function editingAddRow(focus) {
 }
 
 /** Remove table row for field
-* @param string
+* @param string regular expression replacement
 * @return boolean false
 * @this HTMLInputElement
 */
@@ -274,16 +327,16 @@ function editingRemoveRow(name) {
 }
 
 /** Move table row for field
-* @param boolean direction to move row, true for up or false for down
+* @param [boolean]
 * @return boolean false for success
 * @this HTMLInputElement
 */
-function editingMoveRow(dir){
+function editingMoveRow(up){
 	var row = parentTag(this, 'tr');
 	if (!('nextElementSibling' in row)) {
 		return true;
 	}
-	row.parentNode.insertBefore(row, dir
+	row.parentNode.insertBefore(row, up
 		? row.previousElementSibling
 		: row.nextElementSibling ? row.nextElementSibling.nextElementSibling : row.parentNode.firstChild);
 	return false;
@@ -378,7 +431,6 @@ function columnShow(checked, column) {
 function editingHideDefaults() {
 	if (innerWidth < document.documentElement.scrollWidth) {
 		qs('#form')['defaults'].checked = false;
-		columnShow(false, 5);
 	}
 }
 
@@ -400,6 +452,19 @@ function partitionNameChange() {
 	row.firstChild.firstChild.value = '';
 	parentTag(this, 'table').appendChild(row);
 	this.oninput = function () {};
+}
+
+/** Show or hide comment fields
+* @param [boolean] whether to focus Comment if checked
+* @this HTMLInputElement
+*/
+function editingCommentsClick(focus) {
+	var comment = this.form['Comment'];
+	columnShow(this.checked, 6);
+	alterClass(comment, 'hidden', !this.checked);
+	if (focus && this.checked) {
+		comment.focus();
+	}
 }
 
 

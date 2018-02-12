@@ -23,6 +23,7 @@ $translations = array(
 	'Connecting to privileged ports is not allowed.' => 'Xx.',
 	'Session support must be enabled.' => 'Xx.',
 	'Session expired, please login again.' => 'Xx.',
+	'The action will be performed after successful login with the same credentials.' => 'Xx.',
 	'%s version: %s through PHP extension %s' => '%s xx: %s xx %s',
 	'Refresh' => 'Xx',
 	
@@ -253,7 +254,7 @@ $translations = array(
 	'last' => 'xx',
 	'Load more data' => 'Xx',
 	'Loading' => 'Xx',
-	'whole result' => 'xx',
+	'Whole result' => 'Xx',
 	'%d byte(s)' => array('%d xx', '%d xx'),
 	
 	'Import' => 'Xx',

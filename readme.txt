@@ -2,7 +2,7 @@ Adminer - Database management in a single PHP file
 Adminer Editor - Data manipulation for end-users
 
 https://www.adminer.org/
-Supports: MySQL, PostgreSQL, SQLite, MS SQL, Oracle, SimpleDB, Elasticsearch, MongoDB, Firebird
+Supports: MySQL, MariaDB, PostgreSQL, SQLite, MS SQL, Oracle, SimpleDB, Elasticsearch, MongoDB, Firebird
 Requirements: PHP 5+
 Apache License 2.0 or GPL 2
 
@@ -15,4 +15,6 @@ adminer/sqlite.php - Development version of Adminer with SQLite allowed
 adminer/designs.php - Development version of Adminer with adminer.css switcher
 compile.php - Create a single file version
 lang.php - Update translations
-tests/selenium.html - Selenium test suite
+tests/katalon.html - Katalon Automation Recorder test suite
+
+If downloaded from Git then run: git submodule update --init

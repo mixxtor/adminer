@@ -859,9 +859,10 @@ function friendly_url($val) {
 /** Print hidden fields
 * @param array
 * @param array
-* @return null
+* @return bool
 */
 function hidden_fields($process, $ignore = array()) {
+	$return = false;
 	while (list($key, $val) = each($process)) {
 		if (!in_array($key, $ignore)) {
 			if (is_array($val)) {
@@ -869,10 +870,12 @@ function hidden_fields($process, $ignore = array()) {
 					$process[$key . "[$k]"] = $v;
 				}
 			} else {
+				$return = true;
 				echo '<input type="hidden" name="' . h($key) . '" value="' . h($val) . '">';
 			}
 		}
 	}
+	return $return;
 }
 
 /** Print hidden fields for GET forms
@@ -1326,7 +1329,7 @@ function is_url($string) {
 * @return bool
 */
 function is_shortable($field) {
-	return preg_match('~char|text|lob|geometry|point|linestring|polygon|string|bytea~', $field["type"]);
+	return preg_match('~char|text|json|lob|geometry|point|linestring|polygon|string|bytea~', $field["type"]);
 }
 
 /** Get query to compute number of found rows
