@@ -63,20 +63,43 @@ class AdminerDuplicateResultControls
 						}
 						new_pages_box = table_box.parentNode.insertBefore( new_pages_box, table_box );
 
+						var new_rows_count_box;
+
 						// copy also rows number
 						var rows_count_box = pages_box;
 						while (rows_count_box && (!rows_count_box.className || (rows_count_box.className.split(/\s+/).indexOf("count") < 0)))
 							rows_count_box = rows_count_box.nextSibling;
 						if (rows_count_box)
 						{
-							var new_rows_count_box = document.createElement("SPAN");
+							new_rows_count_box = document.createElement("SPAN");
 							var i, rows_count_box_childs = rows_count_box.childNodes;
 							for (i=0; i<rows_count_box_childs.length; i++)
 								if (!rows_count_box_childs[i].tagName)
 									new_rows_count_box.appendChild( rows_count_box_childs[i].cloneNode() );
+						}
+						else		// Adminer >= 4.6.1
+						{
+							var footer = pages_box;
+							while (footer && (!footer.className || (footer.className.split(/\s+/).indexOf("footer") < 0)))
+								footer = footer.nextSibling;
+							var labels = footer.getElementsByTagName("LABEL");
+							if (labels.length)
+							{
+								new_rows_count_box = document.createElement("SPAN");
+								new_rows_count_box.appendChild( document.createTextNode("(") );
+								var i, rows_count_box_childs = labels[0].childNodes;
+								for (i=0; i<rows_count_box_childs.length; i++)
+									if (!rows_count_box_childs[i].tagName)
+										new_rows_count_box.appendChild( rows_count_box_childs[i].cloneNode() );
+								new_rows_count_box.appendChild( document.createTextNode(")") );
+							}
+						}
 
+						if (new_rows_count_box)
+						{
 							var new_rows_count_box = new_pages_box.appendChild( new_rows_count_box );		// at end of upper pages chooser
-							new_rows_count_box.className = rows_count_box.className;
+							if (rows_count_box)
+								new_rows_count_box.className = rows_count_box.className;
 							new_rows_count_box.style.marginLeft = "1ex";
 						}
 					}
