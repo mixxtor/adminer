@@ -34,6 +34,14 @@ class AdminerTableEditByFields
 				document.getElementsByTagName("BODY")[0].appendChild(myAjaxScript);
 			}
 
+			if (!window.myEditingCommentsClick)
+			{
+				var myCommentClickScript = document.createElement("SCRIPT");
+				myCommentClickScript.innerHTML = ("var myEditingCommentsClick = "+editingCommentsClick).replace("function editingCommentsClick(", "function(").replace(", 6)", ", 7)");
+				myCommentClickScript.nonce = '<?=nonce()?>'.replace(/^[^"]+"/, "").replace(/"$/, "");
+				document.getElementsByTagName("BODY")[0].appendChild(myCommentClickScript);
+			}
+
 			// via modified function, because we need full page, not only result table
 			myAjax(current_location.replace(/&create=([^&]*)/, "&select=$1")+"&limit=1", function(request)
 			{
@@ -207,9 +215,7 @@ class AdminerTableEditByFields
 					for (i=0; i<inp_comments.length; i++)
 						if (inp_comments[i].form === fieldsTable.parentNode)
 						{
-							inp_comments[i].onclick = function(event){
-								columnShow(this.checked, 7);
-							};
+							inp_comments[i].onclick = partial(myEditingCommentsClick, true);		// column 7
 							break;
 						}
 				}
