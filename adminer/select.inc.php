@@ -481,15 +481,28 @@ if (!$columns && support("table")) {
 					}
 				}
 
-				if ($limit != "" && ($found_rows === false || $found_rows > $limit || $page)) {
-					echo "<p class='pages'>\n";
+				$pagination = ($limit != "" && ($found_rows === false || $found_rows > $limit || $page));
+				if ($pagination) {
+					echo (($found_rows === false ? count($rows) + 1 : $found_rows - $page * $limit) > $limit
+						? '<p class='pages'><a href="' . h(remove_from_uri("page") . "&page=" . ($page + 1)) . '" class="loadmore">' . lang('Load more data') . '</a>'
+							. script("qsl('a').onclick = partial(selectLoadMore, " . (+$limit) . ", '" . lang('Loading') . "...');", "")
+						: ''
+					);
+					echo "\n";
+				}
+			}
+			
+			echo "<div class='footer'><div>\n";
+			if ($rows || $page) {
+				if ($pagination) {
 					// display first, previous 4, next 4 and last page
 					$max_page = ($found_rows === false
 						? $page + (count($rows) >= $limit ? 2 : 1)
 						: floor(($found_rows - 1) / $limit)
 					);
+					echo "<fieldset>";
 					if ($jush != "simpledb") {
-						echo '<a href="' . h(remove_from_uri("page")) . '">' . lang('Page') . "</a>:";
+						echo "<legend><a href='" . h(remove_from_uri("page")) . "'>" . lang('Page') . "</a></legend>";
 						echo script("qsl('a').onclick = function () { pageClick(this.href, +prompt('" . lang('Page') . "', '" . ($page + 1) . "')); return false; };");
 						echo pagination(0, $page) . ($page > 5 ? " ..." : "");
 						for ($i = max(1, $page - 4); $i < min($max_page, $page + 5); $i++) {
@@ -502,23 +515,15 @@ if (!$columns && support("table")) {
 								: " <a href='" . h(remove_from_uri("page") . "&page=last") . "' title='~$max_page'>" . lang('last') . "</a>"
 							);
 						}
-						echo (($found_rows === false ? count($rows) + 1 : $found_rows - $page * $limit) > $limit
-							? ' <a href="' . h(remove_from_uri("page") . "&page=" . ($page + 1)) . '" class="loadmore">' . lang('Load more data') . '</a>'
-								. script("qsl('a').onclick = partial(selectLoadMore, " . (+$limit) . ", '" . lang('Loading') . "...');", "")
-							: ''
-						);
 					} else {
-						echo lang('Page') . ":";
+						echo "<legend>" . lang('Page') . "</legend>";
 						echo pagination(0, $page) . ($page > 1 ? " ..." : "");
 						echo ($page ? pagination($page, $page) : "");
 						echo ($max_page > $page ? pagination($page + 1, $page) . ($max_page > $page + 1 ? " ..." : "") : "");
 					}
-					echo "\n";
+					echo "</fieldset>\n";
 				}
-			}
 
-			echo "<div class='footer'><div>\n";
-			if ($rows || $page) {
 				echo "<fieldset>";
 				echo "<legend>" . lang('Whole result') . "</legend>";
 				$display_rows = ($exact_count ? "" : "~ ") . $found_rows;
@@ -560,20 +565,24 @@ if (!$columns && support("table")) {
 					echo "</div></fieldset>\n";
 				}
 
+				$adminer->selectEmailPrint(array_filter($email_fields, 'strlen'), $columns);
 			}
 
+			echo "</div></div>\n";
+
 			if ($adminer->selectImportPrint()) {
-				print_fieldset("import", lang('Import'), !$rows);
+				echo "<div>";
+				echo "<a href='#import'>" . lang('Import') . "</a>";
+				echo script("qsl('a').onclick = partial(toggle, 'import');", "");
+				echo "<span id='import' class='hidden'>: ";
 				echo "<input type='file' name='csv_file'> ";
 				echo html_select("separator", array("csv" => "CSV,", "csv;" => "CSV;", "tsv" => "TSV"), $adminer_import["format"], 1); // 1 - select
 				echo " <input type='submit' name='import' value='" . lang('Import') . "'>";
-				echo "</div></fieldset>\n";
+				echo "</span>";
+				echo "</div>";
 			}
 
-			$adminer->selectEmailPrint(array_filter($email_fields, 'strlen'), $columns);
 			echo "<input type='hidden' name='token' value='$token'>\n";
-			echo "</div></div>\n";
-
 			echo "</form>\n";
 			echo (!$group && $select ? "" : script("tableCheck();"));
 		}
