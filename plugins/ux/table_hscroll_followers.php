@@ -62,24 +62,29 @@ class AdminerTableHScrollFollowers
 					var funcShiftElements = function()
 					{
 						var scrollLeft = scroll_box.scrollX || scroll_box.scrollLeft;
-						var i, el, directions = {
+						var dir, el, directions = {
 													down_pages:		{src_obj:result_table, shift_attr:"nextSibling"},
 													up_pages:		{src_obj:result_table, shift_attr:"previousSibling"},
 													up_elements:	{src_obj:result_table.parentNode, shift_attr:"previousSibling"}
 												};
-						for (i in directions)
+						for (dir in directions)
 						{
-							var el = directions[i].src_obj;
-							while (el && (el = el[ directions[i].shift_attr ]))
+							var el = directions[dir].src_obj;
+							while (el && (el = el[ directions[dir].shift_attr ]))
 							{
 								if (el.tagName
-									&& (((i != "up_elements")
+									&& (((dir != "up_elements")
 											&& ((result_table.parentNode.tagName != "FORM")
 												|| (el.className.split(/\s+/).indexOf("pages") >= 0)
 												|| (el.className.split(/\s+/).indexOf("footer") >= 0)				// Adminer >= 4.6.1: sticky element broke, but "load more" button work much better when it scroll to right also!
+												|| (el.tagName == "P"
+													&& el.getElementsByTagName("A").length
+													&& el.getElementsByTagName("A")[0].className.split(/\s+/).indexOf("loadmore") >= 0
+													)
 												)
 											)
-										|| (i == "up_elements")
+										|| (dir == "up_elements")
+										|| (dir == "up_pages")
 										)
 									&& (el.id != "breadcrumb")
 									&& (el.tagName != "TABLE")							// result of second+ queries

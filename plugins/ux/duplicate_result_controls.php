@@ -41,6 +41,18 @@ class AdminerDuplicateResultControls
 					var pages_box = table_box;
 					while (pages_box && (!pages_box.className || (pages_box.className.split(/\s+/).indexOf("pages") < 0)))
 						pages_box = pages_box.nextSibling;
+					if (!pages_box)		// Adminer >= 4.6.2
+					{
+						var footer_box = table_box;
+						while (footer_box && (!footer_box.className || (footer_box.className.split(/\s+/).indexOf("footer") < 0)))
+							footer_box = footer_box.nextSibling;
+						if (footer_box)
+						{
+							pages_box = footer_box.getElementsByTagName("FIELDSET")[0];
+							if (pages_box.getElementsByTagName("INPUT").length)				// if first is "Whole result" => no pages list
+								pages_box = null;
+						}
+					}
 
 					if (pages_box)
 					{
@@ -77,6 +89,7 @@ class AdminerDuplicateResultControls
 								if (!rows_count_box_childs[i].tagName)
 									new_rows_count_box.appendChild( rows_count_box_childs[i].cloneNode() );
 						}
+/*
 						else		// Adminer >= 4.6.1
 						{
 							var footer = pages_box;
@@ -94,7 +107,7 @@ class AdminerDuplicateResultControls
 								new_rows_count_box.appendChild( document.createTextNode(")") );
 							}
 						}
-
+*/
 						if (new_rows_count_box)
 						{
 							var new_rows_count_box = new_pages_box.appendChild( new_rows_count_box );		// at end of upper pages chooser
