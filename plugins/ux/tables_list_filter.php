@@ -17,7 +17,7 @@ class AdminerTablesListFilter
 		// text wrap in <code> blocks
 		var style = document.createElement('style');
 		style.type = 'text/css';
-		style.innerHTML = '#menu p .hidden { display: none !important; }';
+		style.innerHTML = '#menu p .hidden, #menu li .hidden { display: none !important; }';
 		document.getElementsByTagName('head')[0].appendChild(style);
 
 		document.addEventListener("DOMContentLoaded", function(evt)

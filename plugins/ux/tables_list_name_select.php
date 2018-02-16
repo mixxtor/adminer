@@ -101,13 +101,16 @@ class AdminerTablesListNameSelect
 								if ((rules[j].cssText.indexOf('#menu p a[href*="&select="]') >= 0)
 									|| (rules[j].cssText.indexOf('#menu a[href*="&select="]') >= 0)
 									|| (rules[j].cssText.indexOf("#menu p a[href*='&select=']") >= 0)
+									|| (rules[j].cssText.indexOf("#menu li a[href*='&select=']") >= 0)
+									|| (rules[j].cssText.indexOf('#menu li a[href*="&select="]') >= 0)
 									|| (rules[j].cssText.indexOf("#menu a[href*='&select=']") >= 0)
 									|| (rules[j].cssText.indexOf("#menu p a.select") >= 0)
+									|| (rules[j].cssText.indexOf("#menu li a.select") >= 0)
 									|| (rules[j].cssText.indexOf("#menu a.select") >= 0)
 									)
 								{
 	//								rules[j].cssText = rules[j].cssText.replace(/\#menu p a\[href\*\=["']\&select\=["']\]/, '#menu p a.select');	// Firefox and IE did not support this method
-									cssSelector = rules[j].selectorText.replace(/\#menu( p)? a\[href\*\=["']\&select\=["']\]/g, '#menu #tables a.select');
+									cssSelector = rules[j].selectorText.replace(/\#menu( (p|li))? a\[href\*\=["']\&select\=["']\]/g, '#menu #tables a.select');
 									cssText = rules[j].style.cssText;
 									if (structure_icon && (cssText.indexOf("content:") >= 0))	// no icon => just leave previous icon
 										cssText = cssText.replace(/content:\s*url\([^\)]+\);/, "content: "+structure_icon+";") + " opacity:0.7;";
@@ -125,9 +128,11 @@ class AdminerTablesListNameSelect
 										|| (rules[j].cssText.indexOf("#tables a[href*='&select=']") >= 0)
 										|| (rules[j].cssText.indexOf('#tables p a[href*="&select="]') >= 0)
 										|| (rules[j].cssText.indexOf("#tables p a[href*='&select=']") >= 0)
+										|| (rules[j].cssText.indexOf('#tables li a[href*="&select="]') >= 0)
+										|| (rules[j].cssText.indexOf("#tables li a[href*='&select=']") >= 0)
 										)
 									{
-										cssSelector = rules[j].selectorText.replace(/\#tables( p)? a\[href\*\=["']\&select\=["']\]/g, '#menu #tables a.select');
+										cssSelector = rules[j].selectorText.replace(/\#tables( (p|li))? a\[href\*\=["']\&select\=["']\]/g, '#menu #tables a.select');
 										cssText = rules[j].style.cssText;
 										if (structure_icon && (cssText.indexOf("content:") >= 0))
 											cssText = cssText.replace(/content:\s*url\([^\)]+\);/, "content: "+structure_icon+";") + " opacity:0.7;";
@@ -145,9 +150,11 @@ class AdminerTablesListNameSelect
 										|| (rules[j].cssText.indexOf("#menu a[href*='&table=']") >= 0)
 										|| (rules[j].cssText.indexOf('#menu p a[href*="&table="]') >= 0)
 										|| (rules[j].cssText.indexOf("#menu p a[href*='&table=']") >= 0)
+										|| (rules[j].cssText.indexOf('#menu li a[href*="&table="]') >= 0)
+										|| (rules[j].cssText.indexOf("#menu li a[href*='&table=']") >= 0)
 										)
 									{
-										cssSelector = rules[j].selectorText.replace(/\#menu( p)? a\[href\*\=["']\&(table|view)\=["']\]/g, '#menu #tables a');
+										cssSelector = rules[j].selectorText.replace(/\#menu( (p|li))? a\[href\*\=["']\&(table|view)\=["']\]/g, '#menu #tables a');
 										cssText = rules[j].style.cssText;
 										styleSheets[i].deleteRule(j);										// removeRule() uses other indexes
 										styleSheets[i].insertRule(cssSelector + " {" + cssText + "}", j);	// addRule() uses other indexes
