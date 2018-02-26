@@ -11,7 +11,7 @@ if (!$variables) {
 	foreach ($variables as $key => $val) {
 		echo "<tr>";
 		echo "<th><code class='jush-" . $jush . ($status ? "status" : "set") . "'>" . h($key) . "</code>";
-		echo "<td>" . nbsp($val);
+		echo "<td>" . h($val);
 		if (is_numeric($val))
 		{
 			if (($val >= 1024) && (substr($key, -5) == "_size" || strpos($key, "_bytes")))
