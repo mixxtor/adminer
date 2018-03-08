@@ -1050,6 +1050,9 @@ bodyLoad('<?php echo (is_object($connection) ? preg_replace('~^(\d\.?\d).*~s', '
 	function databasesPrint($missing) {
 		global $adminer, $connection;
 		$databases = $this->databases();
+		if ($databases && !in_array(DB, $databases)) {
+			array_unshift($databases, DB);
+		}
 		?>
 <form action="">
 <p id="dbs">
