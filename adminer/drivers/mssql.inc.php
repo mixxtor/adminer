@@ -24,7 +24,7 @@ if (isset($_GET["mssql"])) {
 			}
 
 			function connect($server, $username, $password) {
-				$this->_link = @sqlsrv_connect($server, array("UID" => $username, "PWD" => $password, "CharacterSet" => "UTF-8"));
+				$this->_link = @sqlsrv_connect(preg_replace('~:~', ',', $server), array("UID" => $username, "PWD" => $password, "CharacterSet" => "UTF-8"));
 				if ($this->_link) {
 					$info = sqlsrv_server_info($this->_link);
 					$this->server_info = $info['SQLServerVersion'];
@@ -147,8 +147,10 @@ if (isset($_GET["mssql"])) {
 				$this->_link = @mssql_connect($server, $username, $password);
 				if ($this->_link) {
 					$result = $this->query("SELECT SERVERPROPERTY('ProductLevel'), SERVERPROPERTY('Edition')");
-					$row = $result->fetch_row();
-					$this->server_info = $this->result("sp_server_info 2", 2) . " [$row[0]] $row[1]";
+					if ($result) {
+						$row = $result->fetch_row();
+						$this->server_info = $this->result("sp_server_info 2", 2) . " [$row[0]] $row[1]";
+					}
 				} else {
 					$this->error = mssql_get_last_message();
 				}

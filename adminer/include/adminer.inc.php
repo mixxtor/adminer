@@ -145,9 +145,8 @@ class Adminer {
 	* @return mixed true for success, string for error message, false for unknown error
 	*/
 	function login($login, $password) {
-		global $jush;
-		if ($jush == "sqlite") {
-			return lang('<a href="https://www.adminer.org/en/extension/"%s>Implement</a> %s method to use SQLite.', target_blank(), '<code>login()</code>');
+		if ($password == "") {
+			return lang('Adminer does not support accessing a database without a password, <a href="https://www.adminer.org/en/password/"%s>more information</a>.', target_blank());
 		}
 		return true;
 	}
@@ -893,7 +892,7 @@ class Adminer {
 							if ($field["auto_increment"] && ($style == "INSERT-AI"))
 								$val = null;
 							$row[$key] = ($val !== null
-								? unconvert_field($field, preg_match(number_type(), $field["type"]) && $val != '' ? $val : q($val))
+								? unconvert_field($field, preg_match(number_type(), $field["type"]) && $val != '' ? $val : q(($val === false ? 0 : $val)))
 								: "NULL"
 							);
 						}

@@ -388,7 +388,7 @@ if (!defined("DRIVER")) {
 		if ($return === null) {
 			$ts = microtime(true);
 			$query = (min_version(5)
-				? "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA"
+				? "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA ORDER BY SCHEMA_NAME"
 				: "SHOW DATABASES"
 			); // SHOW DATABASES can be disabled by skip_show_database
 			$return = ($flush ? slow_query($query) : get_vals($query));
@@ -847,6 +847,12 @@ if (!defined("DRIVER")) {
 				|| !queries("INSERT INTO $name SELECT * FROM " . table($table))
 			) {
 				return false;
+			}
+			foreach (get_rows("SHOW TRIGGERS LIKE " . q(addcslashes($table, "%_\\"))) as $row) {
+				$trigger = $row["Trigger"];
+				if (!queries("CREATE TRIGGER " . ($target == DB ? idf_escape("copy_$trigger") : idf_escape($target) . "." . idf_escape($trigger)) . " $row[Timing] $row[Event] ON $name FOR EACH ROW\n$row[Statement];")) {
+					return false;
+				}
 			}
 		}
 		foreach ($views as $table) {

@@ -2,10 +2,10 @@
 $drivers["elastic"] = "Elasticsearch (beta)";
 
 if (isset($_GET["elastic"])) {
-	$possible_drivers = array("json");
+	$possible_drivers = array("json + allow_url_fopen");
 	define("DRIVER", "elastic");
 
-	if (function_exists('json_decode')) {
+	if (function_exists('json_decode') && ini_bool('allow_url_fopen')) {
 		class Min_DB {
 			var $extension = "JSON", $server_info, $errno, $error, $_url;
 
@@ -129,7 +129,7 @@ if (isset($_GET["elastic"])) {
 				}
 			}
 			foreach ($where as $val) {
-				list($col,$op,$val) = explode(" ",$val,3);
+				list($col, $op, $val) = explode(" ", $val, 3);
 				if ($col == "_id") {
 					$data["query"]["ids"]["values"][] = $val;
 				}
@@ -227,8 +227,11 @@ if (isset($_GET["elastic"])) {
 	function connect() {
 		global $adminer;
 		$connection = new Min_DB;
-		$credentials = $adminer->credentials();
-		if ($connection->connect($credentials[0], $credentials[1], $credentials[2])) {
+		list($server, $username, $password) = $adminer->credentials();
+		if ($password != "" && $connection->connect($server, $username, "")) {
+			return lang('Database does not support password.');
+		}
+		if ($connection->connect($server, $username, $password)) {
 			return $connection;
 		}
 		return $connection->error;
