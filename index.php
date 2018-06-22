@@ -89,7 +89,19 @@ function adminer_object()
     return new AdminerCustomization($plugins);
     */
 
-    return new AdminerPlugin($plugins);
+	class myAdminerWithPlugins extends AdminerPlugin
+	{
+		function login($login, $password)
+		{
+			// using localhost allow no password access
+			if ($_SERVER["HTTP_HOST"] && (gethostbyname($_SERVER["HTTP_HOST"]) == "127.0.0.1"))
+				return true;
+
+			return parent::login($login, $password);
+		}
+	}
+
+    return new myAdminerWithPlugins($plugins);
 }
 
 // include original Adminer or Adminer Editor
