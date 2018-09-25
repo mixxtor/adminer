@@ -31,13 +31,19 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.6.4-dev:
+Adminer 4.7.0-dev:
+Warn when using password with leading or trailing spaces
 Fix inline editing of empty cells (regression from 4.6.3)
 Allow adding more than two indexes and forign key columns at a time (regression from 4.4.0)
 Fix function change with set data type
 Increase username maxlength to 80 (bug #623)
 Make maxlength in all fields a soft limit
 MySQL: Support foreign keys created with ANSI quotes (bug #620)
+MySQL: Recognize ON UPDATE current_timestamp() (bug #632)
+PostgreSQL: Quote array values in export (bug #621)
+MSSQL: Pass database when connecting
+ClickHouse: Connect, databases list, tables list, select, SQL command
+Georgian translation
 
 Adminer 4.6.3 (released 2018-06-28):
 Disallow using password-less databases

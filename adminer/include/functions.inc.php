@@ -1471,7 +1471,7 @@ function edit_form($TABLE, $fields, $row, $update) {
 		foreach ($rows_list as $row_key => $row) {
 			if (count($rows_list) == 1)
 				$row_key = null;
-			echo "<table cellspacing='0'>" . script("qsl('table').onkeydown = editingKeydown;");
+			echo "<table cellspacing='0' class='layout'>" . script("qsl('table').onkeydown = editingKeydown;");
 
 			foreach ($fields as $name => $field) {
 				echo "<tr><th>" . $adminer->fieldName($field) . ($field["comment"] ? "<br /><small>".$field["comment"]."</small>" : "");
