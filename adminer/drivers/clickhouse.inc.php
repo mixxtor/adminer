@@ -12,12 +12,12 @@ if (isset($_GET["clickhouse"])) {
 			@ini_set('track_errors', 1); // @ - may be disabled
 			$file = @file_get_contents("$this->_url/?database=$db", false, stream_context_create(array('http' => array(
 				'method' => 'POST',
-				'content' => stripos($query, 'insert') === 0 ? $query : "$query FORMAT JSONCompact",
+				'content' => $this->isQuerySelectLike($query) ? "$query FORMAT JSONCompact" : $query,
 				'header' => 'Content-type: application/x-www-form-urlencoded',
 				'ignore_errors' => 1, // available since PHP 5.2.10
 			))));
 
-			if (!$file) {
+			if ($file === false) {
 				$this->error = $php_errormsg;
 				return $file;
 			}
@@ -41,6 +41,10 @@ if (isset($_GET["clickhouse"])) {
 				}
 			}
 			return new Min_Result($return);
+		}
+
+		function isQuerySelectLike($query) {
+			return (bool) preg_match('~^(select|show)~i', $query);
 		}
 
 		function query($query) {
@@ -118,6 +122,18 @@ if (isset($_GET["clickhouse"])) {
 
 
 	class Min_Driver extends Min_SQL {
+		function delete($table, $queryWhere, $limit = 0) {
+			return queries("ALTER TABLE " . table($table) . " DELETE $queryWhere");
+		}
+
+		function update($table, $set, $queryWhere, $limit = 0, $separator = "\n") {
+			$values = array();
+			foreach ($set as $key => $val) {
+				$values[] = "$key = $val";
+			}
+			$query = $separator . implode(",$separator", $values);
+			return queries("ALTER TABLE " . table($table) . " UPDATE $query$queryWhere");
+		}
 	}
 
 	function idf_escape($idf) {
@@ -138,33 +154,12 @@ if (isset($_GET["clickhouse"])) {
 	}
 
 	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
-		$alter = array();
 		foreach ($fields as $field) {
 			if ($field[1][2] === " NULL") {
 				$field[1][1] = " Nullable({$field[1][1]})";
 			}
 			unset($field[1][2]);
-			$alter[] = ($field[1]
-				? ($table != "" ? ($field[0] != "" ? "CHANGE " . idf_escape($field[0]) : "ADD") : " ") . " " . implode($field[1])
-				: "DROP " . idf_escape($field[0])
-			);
 		}
-		$alter = array_merge($alter, $foreign);
-		$status = ($comment !== null ? " COMMENT=" . q($comment) : "")
-			. ($engine ? " ENGINE=" . q($engine) : "")
-			. ($collation ? " COLLATE " . q($collation) : "")
-			. ($auto_increment != "" ? " AUTO_INCREMENT=$auto_increment" : "")
-		;
-		if ($table == "") {
-			return queries("CREATE TABLE " . table($name) . " (\n" . implode(",\n", $alter) . "\n)$status$partitioning");
-		}
-		if ($table != $name) {
-			$alter[] = "RENAME TO " . table($name);
-		}
-		if ($status) {
-			$alter[] = ltrim($status);
-		}
-		return ($alter || $partitioning ? queries("ALTER TABLE " . table($table) . "\n" . implode(",\n", $alter) . $partitioning) : true);
 	}
 
 	function truncate_tables($tables) {
@@ -172,11 +167,11 @@ if (isset($_GET["clickhouse"])) {
 	}
 
 	function drop_views($views) {
-		return queries("DROP VIEW " . implode(", ", array_map('table', $views)));
+		return drop_tables($views);
 	}
 
 	function drop_tables($tables) {
-		return queries("DROP TABLE " . implode(", ", array_map('table', $tables)));
+		return apply_queries("DROP TABLE", $tables);
 	}
 
 	function connect() {
@@ -331,6 +326,10 @@ if (isset($_GET["clickhouse"])) {
 		return '';
 	}
 
+	function last_id() {
+		return 0; // ClickHouse doesn't have it
+	}
+
 	function support($feature) {
 		return preg_match("~^(columns|sql|status|table)$~", $feature);
 	}
@@ -339,7 +338,7 @@ if (isset($_GET["clickhouse"])) {
 	$types = array();
 	$structured_types = array();
 	foreach (array( //! arrays
-		lang('Numbers') => array("Int8" => 3, "Int16" => 5, "Int32" => 10, "Int64" => 19, "UInt8" => 3, "UInt16" => 5, "UInt32" => 10, "UInt64" => 20, "Float32" => 7, "Float64" => 16),
+		lang('Numbers') => array("Int8" => 3, "Int16" => 5, "Int32" => 10, "Int64" => 19, "UInt8" => 3, "UInt16" => 5, "UInt32" => 10, "UInt64" => 20, "Float32" => 7, "Float64" => 16, 'Decimal' => 38, 'Decimal32' => 9, 'Decimal64' => 18, 'Decimal128' => 38),
 		lang('Date and time') => array("Date" => 13, "DateTime" => 20),
 		lang('Strings') => array("String" => 0),
 		lang('Binary') => array("FixedString" => 0),
@@ -348,7 +347,7 @@ if (isset($_GET["clickhouse"])) {
 		$structured_types[$key] = array_keys($val);
 	}
 	$unsigned = array();
-	$operators = array("=", "<", ">", "<=", ">=", "!=", "~", "!~", "LIKE", "LIKE %%", "IN", "IS NULL", "NOT LIKE", "NOT IN", "IS NOT NULL");
+	$operators = array("=", "<", ">", "<=", ">=", "!=", "~", "!~", "LIKE", "LIKE %%", "IN", "IS NULL", "NOT LIKE", "NOT IN", "IS NOT NULL", "SQL");
 	$functions = array();
 	$grouping = array("avg", "count", "count distinct", "max", "min", "sum");
 	$edit_functions = array();

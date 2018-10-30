@@ -33,6 +33,7 @@ select:disabled { background-color: #ebebe4; }	/* Chrome fix */
 .version { color: #777; font-size: 67%; }
 .js .hidden, .nojs .jsonly { display: none; }
 .js .column { position: absolute; background: #ddf; padding: .27em 1ex .3em 0; margin-top: -.27em; }
+.scrollable { overflow-x: auto; }
 .nowrap td, .nowrap th, td.nowrap, p.nowrap { white-space: pre; }
 .wrap td { white-space: normal; }
 .error { color: red; background: #fee; }

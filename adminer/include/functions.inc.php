@@ -1054,7 +1054,7 @@ function process_input($field, $group_id = null) {
 		return null;
 	}
 	if ($function == "orig") {
-		return ($field["on_update"] == "CURRENT_TIMESTAMP" ? idf_escape($field["field"]) : false);
+		return (preg_match('~^CURRENT_TIMESTAMP~i', $field["on_update"]) ? idf_escape($field["field"]) : false);
 	}
 	if ($function == "NULL") {
 		return "NULL";
@@ -1497,12 +1497,12 @@ function edit_form($TABLE, $fields, $row, $update) {
 				}
 				$function = ($_POST["save"]
 					? (string) $_POST["function"][$name]
-					: ($update && $field["on_update"] == "CURRENT_TIMESTAMP"
+					: ($update && preg_match('~^CURRENT_TIMESTAMP~i', $field["on_update"])
 						? "now"
 						: ($value === false ? null : ($value !== null ? '' : 'NULL'))
 					)
 				);
-				if (preg_match("~time~", $field["type"]) && $value == "CURRENT_TIMESTAMP") {
+				if (preg_match("~time~", $field["type"]) && preg_match('~^CURRENT_TIMESTAMP~i', $value)) {
 					$value = "";
 					$function = "now";
 				}

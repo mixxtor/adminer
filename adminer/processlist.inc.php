@@ -14,6 +14,7 @@ $adminer->startLinks();
 ?>
 
 <form action="" method="post">
+<div class="scrollable">
 <table cellspacing="0" class="nowrap checkable">
 <?php
 echo script("mixin(qsl('table'), {onclick: tableClick, ondblclick: partialArg(tableClick, true)});");
@@ -46,6 +47,7 @@ foreach (process_list() as $i => $row) {
 }
 ?>
 </table>
+</div>
 <p>
 <?php
 if (support("kill")) {
