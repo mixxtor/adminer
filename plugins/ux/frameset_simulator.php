@@ -183,6 +183,12 @@ class AdminerFramesetSimulator
 			content.style.overflow = "visible !important";
 			content_scroll_box.focus();
 
+			// fix scrollable table box
+			var tables = document.getElementsByTagName("TABLE");
+			for (var i=0; i<tables.length; i++)
+				if (tables[i].parentNode.className == "scrollable")
+					tables[i].parentNode.className = "";
+
 			// fix breadcrumb position in some skins
 			var breadcrumb = document.getElementById("breadcrumb");
 			if (GetStyleOfElement(breadcrumb, "position") == "absolute")
