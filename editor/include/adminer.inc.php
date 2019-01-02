@@ -72,8 +72,8 @@ class Adminer {
 
 	function loginForm() {
 		echo "<table cellspacing='0' class='layout'>\n";
-		echo $this->loginFormField('username', '<tr><th>' . lang('Username') . '<td>', '<input type="hidden" name="auth[driver]" value="server"><input name="auth[username]" id="username" value="' . h($_GET["username"]) . '" autocapitalize="off">' . script("focus(qs('#username'));"));
-		echo $this->loginFormField('password', '<tr><th>' . lang('Password') . '<td>', '<input type="password" name="auth[password]">' . "\n");
+		echo $this->loginFormField('username', '<tr><th>' . lang('Username') . '<td>', '<input type="hidden" name="auth[driver]" value="server"><input name="auth[username]" id="username" value="' . h($_GET["username"]) . '" autocomplete="username" autocapitalize="off">' . script("focus(qs('#username'));"));
+		echo $this->loginFormField('password', '<tr><th>' . lang('Password') . '<td>', '<input type="password" name="auth[password]" autocomplete="current-password">' . "\n");
 		echo "</table>\n";
 		echo "<p><input type='submit' value='" . lang('Login') . "'>\n";
 		echo checkbox("auth[permanent]", 1, $_COOKIE["adminer_permanent"], lang('Permanent login')) . "\n";
@@ -586,11 +586,11 @@ qsl('div').onclick = whisperClick;", "")
 				foreach ($servers[""] as $username => $password) {
 					if ($password !== null) {
 						if ($first) {
-							echo "<p id='logins'>";
+							echo "<ul id='logins'>";
 							echo script("mixin(qs('#logins'), {onmouseover: menuOver, onmouseout: menuOut});");
 							$first = false;
 						}
-						echo "<a href='" . h(auth_url($vendor, "", $username)) . "'>" . ($username != "" ? h($username) : "<i>" . lang('empty') . "</i>") . "</a><br>\n";
+						echo "<li><a href='" . h(auth_url($vendor, "", $username)) . "'>" . ($username != "" ? h($username) : "<i>" . lang('empty') . "</i>") . "</a>\n";
 					}
 				}
 			}
