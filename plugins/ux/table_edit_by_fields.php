@@ -204,18 +204,18 @@ class AdminerTableEditByFields
 					// fix "Default" and "Comment" checkbox handlers. We have +1 column => shift previous indexes
 					var inp_defaults = document.getElementsByName("defaults");
 					for (i=0; i<inp_defaults.length; i++)
-						if (inp_defaults[i].form === fieldsTable.parentNode)
+						if (inp_defaults[i].form === fieldsTable.parentNode.parentNode)
 						{
-							inp_defaults[i].onclick = function(event){
+							inp_defaults[i].onclick = function(){
 								columnShow(this.checked, 6);
 							};
 							break;
 						}
 					var inp_comments = document.getElementsByName("comments");
 					for (i=0; i<inp_comments.length; i++)
-						if (inp_comments[i].form === fieldsTable.parentNode)
+						if (inp_comments[i].form === fieldsTable.parentNode.parentNode)
 						{
-							inp_comments[i].onclick = partial(myEditingCommentsClick, true);		// column 7
+							inp_comments[i].onclick = function () { myEditingCommentsClick(this, true); };		// column 7
 							break;
 						}
 				}
