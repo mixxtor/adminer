@@ -31,9 +31,16 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.7.1-dev:
+Adminer 4.7.2-dev:
+MySQL: Fix creating users and changing password in MySQL 8 (bug #663)
+
+Adminer 4.7.1 (released 2019-01-24):
+Display the tables scrollbar (bug #647)
+Remember visible columns in Create Table form (bug #493)
 Add autocomplete attributes to login form
 PHP <5.4 compatibility even with ClickHouse enabled (regression from 4.7.0)
+SQLite: Hide server field in login form
+Editor: Allow disabling boolean fields in PostgreSQL (bug #640)
 
 Adminer 4.7.0 (released 2018-11-24):
 Simplify storing executed SQL queries to bookmarks

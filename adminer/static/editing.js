@@ -17,7 +17,8 @@ function bodyLoad(version, maria) {
 						for (var i = 1; i < obj.length; i++) {
 							obj[i] = obj[i]
 								.replace(/\.html/, '/')
-								.replace(/(numeric)(-type-overview)/, (maria ? '$1-data$2' : '$&')) // MariaDB
+								.replace(/(numeric)(-type-overview)/, '$1-data$2')
+								.replace(/#statvar_.*/, '#$$1')
 							;
 						}
 					}
@@ -77,6 +78,18 @@ function messagesPrint() {
 	for (var i = 0; i < els.length; i++) {
 		els[i].onclick = partial(toggle, els[i].getAttribute('href').substr(1));
 	}
+}
+
+
+
+/** Hide or show some login rows for selected driver	
+* @param HTMLSelectElement	
+*/	
+function loginDriver(driver) {	
+	var trs = parentTag(driver, 'table').rows;	
+	var disabled = /sqlite/.test(selectValue(driver));	
+	alterClass(trs[1], 'hidden', disabled);	// 1 - row with server
+	trs[1].getElementsByTagName('input')[0].disabled = disabled;	
 }
 
 
@@ -447,14 +460,6 @@ function columnShow(checked, column) {
 	}
 }
 
-/** Hide column with default values in narrow window
-*/
-function editingHideDefaults() {
-	if (innerWidth < document.documentElement.scrollWidth) {
-		qs('#form')['defaults'].checked = false;
-	}
-}
-
 /** Display partition options
 * @this HTMLSelectElement
 */
@@ -476,14 +481,14 @@ function partitionNameChange() {
 }
 
 /** Show or hide comment fields
+* @param HTMLInputElement
 * @param [boolean] whether to focus Comment if checked
-* @this HTMLInputElement
 */
-function editingCommentsClick(focus) {
-	var comment = this.form['Comment'];
-	columnShow(this.checked, 6);
-	alterClass(comment, 'hidden', !this.checked);
-	if (focus && this.checked) {
+function editingCommentsClick(el, focus) {
+	var comment = el.form['Comment'];
+	columnShow(el.checked, 6);
+	alterClass(comment, 'hidden', !el.checked);
+	if (focus && el.checked) {
 		comment.focus();
 	}
 }
