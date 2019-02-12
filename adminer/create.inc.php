@@ -211,7 +211,7 @@ foreach ($engines as $engine) {
 <div class="scrollable">
 <table cellspacing="0" id="edit-fields" class="nowrap">
 <?php
-edit_fields($row["fields"], $collations, "TABLE", $foreign_keys);
+$comments = ($_POST ? $_POST["comments"] : adminer_setting("comments"));
 $defaults = ($_POST ? $_POST["defaults"] : adminer_setting("defaults"));
 $quick_edit = ($_POST ? $_POST["up"] || $_POST["down"] || $_POST["add"] || $_POST["drop_col"] : false);
 if ($quick_edit || (!$_POST && (!$comments || !$defaults))) {
@@ -221,11 +221,13 @@ if ($quick_edit || (!$_POST && (!$comments || !$defaults))) {
 		}
 		if (!$defaults && ($field["default"] != "")) {
 			$defaults = true;
+		}
+	}
 }
 if ($collations_name && empty($_GET["nojs"]))
-	edit_fields($row["fields"], $collations_name, "TABLE", $foreign_keys, $comments);
+	edit_fields($row["fields"], $collations_name, "TABLE", $foreign_keys);
 else
-	edit_fields($row["fields"], $collations, "TABLE", $foreign_keys, $comments);
+	edit_fields($row["fields"], $collations, "TABLE", $foreign_keys);
 ?>
 </table>
 </div>
@@ -233,7 +235,7 @@ else
 <?php echo lang('Auto Increment'); ?>: <input type="number" name="Auto_increment" size="6" value="<?php echo h($row["Auto_increment"]); ?>">
 <?php echo checkbox("defaults", 1, $defaults, lang('Default values'), "columnShow(this.checked, 5)", "jsonly"); ?>
 <?php echo (support("comment")
-	? checkbox("comments", 1, ($_POST ? $_POST["comments"] : adminer_setting("comments")), lang('Comment'), "editingCommentsClick(this, true);", "jsonly")
+	? checkbox("comments", 1, $comments, lang('Comment'), "editingCommentsClick(this, true);", "jsonly")
 		. ' <input name="Comment" value="' . h($row["Comment"]) . '" data-maxlength="' . (min_version(5.5) ? 2048 : 60) . '">'
 	: '')
 ; ?>
