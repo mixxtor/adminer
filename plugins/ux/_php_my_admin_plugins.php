@@ -10,6 +10,7 @@
 							"tables_list_filter"			=> new AdminerTablesListFilter(),
 							// UI mod
 							"duplicate_result_controls"		=> new AdminerDuplicateResultControls(),
+							"domain_in_breadcrumb"			=> new AdminerDomainInBreadcrumb(),
 
 							// secondary plugins
 							// UI mod
