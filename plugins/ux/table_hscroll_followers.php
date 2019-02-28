@@ -65,7 +65,7 @@ class AdminerTableHScrollFollowers
 						var dir, el, directions = {
 													down_pages:		{src_obj:result_table, shift_attr:"nextSibling"},
 													up_pages:		{src_obj:result_table, shift_attr:"previousSibling"},
-													up_elements:	{src_obj:result_table.parentNode, shift_attr:"previousSibling"}
+													up_elements:	{src_obj:result_table.parentNode.parentNode, shift_attr:"previousSibling"}
 												};
 						for (dir in directions)
 						{

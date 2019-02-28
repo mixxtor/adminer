@@ -173,6 +173,11 @@ class AdminerExecutedQueryOutputModifier
 								});
 
 								new_form["mySourceCodeBox"] = source_button_box;
+								if (source_button_box.style.left != "")
+								{
+									new_form.style.left = source_button_box.style.left;
+									new_form.style.position = source_button_box.style.position;
+								}
 								source_button_box.parentNode.insertBefore(new_form, source_button_box.nextSibling);
 								source_button_box.style.display = "none";
 								new_textarea.focus();	// fix dynamic elements, for example with submit_at_right plugin
