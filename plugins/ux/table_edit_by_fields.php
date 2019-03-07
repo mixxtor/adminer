@@ -62,7 +62,6 @@ class AdminerTableEditByFields
 
 				var funcEditTableField = function(evt)
 				{
-					console.log(evt);
 					if (evt.target && evt.target.type && (evt.target.type == "image") && (evt.target.name.indexOf("up[") !== 0) && (evt.target.name.indexOf("down[") !== 0))
 						return false;
 					if (evt.keyCode && (evt.keyCode == 9))
@@ -87,7 +86,7 @@ class AdminerTableEditByFields
 					for (j=0; j<inputs_cnt; j++)
 						inputs[j].disabled = false;
 
-					row.cells[0].innerHTML = "";
+					row.cells[0].getElementsByTagName("A")[0].style.visibility = "hidden";
 
 					if (evt.target)
 						evt.target.focus();
