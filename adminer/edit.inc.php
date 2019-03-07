@@ -151,7 +151,7 @@ if (!support("table") && !$fields) {
 	}
 }
 
-if (count($_POST["check"]) > 1) {
+if ($_POST && count($_POST["check"]) > 1) {
 	$rows_list = array();
 	$updates_list = array();
 	foreach ($_POST["check"] as $k => $check_value) {
