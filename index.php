@@ -1,4 +1,10 @@
 <?php
+if (file_exists("ip_filter.php"))
+{
+	// user defined script with possibility to filter by IP
+    include_once "ip_filter.php";
+}
+
 define("CURRENT_DIR", __DIR__."/");
 if (file_exists("adminer.php"))
 {
