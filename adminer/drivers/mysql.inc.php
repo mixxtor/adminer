@@ -847,7 +847,8 @@ if (!defined("DRIVER")) {
 		queries("SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
 		foreach ($tables as $table) {
 			$name = ($target == DB && (empty($target_table) || $target_table == $table) ? table("copy_$table") : idf_escape($target) . "." . (empty($target_table) ? table($table) : table($target_table)) );
-			if (!queries("CREATE TABLE $name LIKE " . table($table))
+			if (($_POST["overwrite"] && !queries("\nDROP TABLE IF EXISTS $name"))
+				|| !queries("CREATE TABLE $name LIKE " . table($table))
 				|| !queries("INSERT INTO $name SELECT * FROM " . table($table))
 			) {
 				return false;
@@ -862,7 +863,8 @@ if (!defined("DRIVER")) {
 		foreach ($views as $table) {
 			$name = ($target == DB && (empty($target_table) || $target_table == $table) ? table("copy_$table") : idf_escape($target) . "." . (empty($target_table) ? table($table) : table($target_table)) );
 			$view = view($table);
-			if (!queries("CREATE VIEW $name AS $view[select]")) { //! USE to avoid db.table
+			if (($_POST["overwrite"] && !queries("DROP VIEW IF EXISTS $name"))
+				|| !queries("CREATE VIEW $name AS $view[select]")) { //! USE to avoid db.table
 				return false;
 			}
 		}
@@ -1114,7 +1116,7 @@ if (!defined("DRIVER")) {
 			$return = "CONV($return, 2, 10) + 0";
 		}
 		if (preg_match("~geometry|point|linestring|polygon~", $field["type"])) {
-			$return = (min_version(8) ? "ST_" : "") . "GeomFromText($return)";
+			$return = (min_version(8) ? "ST_" : "") . "GeomFromText($return, SRID($field[field]))";
 		}
 		return $return;
 	}
