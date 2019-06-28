@@ -202,6 +202,10 @@ class AdminerDbDiagnosticsQueries
 																				SELECT TABLE_NAME, ENGINE, ROW_FORMAT, TABLE_ROWS, DATA_LENGTH/1024/1024 AS `data_length_MB`, INDEX_LENGTH/1024/1024 AS `index_length_MB`\n\
 																				FROM information_schema.tables\n\
 																				WHERE TABLE_SCHEMA = '"+db_name+"' AND ENGINE='MyISAM';");
+								funcAddShortcutToQuery();	// delimiter
+
+								funcAddShortcutToQuery("Show InnoDB Monitor log", "## Show log of InnoDB monitor to detect issues like deadlocks.\n\n\
+																				SHOW ENGINE INNODB STATUS;");
 <?php
 							break;
 						}
