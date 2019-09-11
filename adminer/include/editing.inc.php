@@ -535,12 +535,17 @@ function remove_definer($query) {
 }
 
 /** Format foreign key to use in SQL query
-* @param array ("table" => string, "source" => array, "target" => array, "on_delete" => one of $on_actions, "on_update" => one of $on_actions)
+* @param array ("db" => string, "ns" => string, "table" => string, "source" => array, "target" => array, "on_delete" => one of $on_actions, "on_update" => one of $on_actions)
 * @return string
 */
 function format_foreign_key($foreign_key) {
 	global $on_actions;
-	return " FOREIGN KEY (" . implode(", ", array_map('idf_escape', $foreign_key["source"])) . ") REFERENCES " . table($foreign_key["table"])
+	$db = $foreign_key["db"];
+	$ns = $foreign_key["ns"];
+	return " FOREIGN KEY (" . implode(", ", array_map('idf_escape', $foreign_key["source"])) . ") REFERENCES "
+		. ($db != "" && $db != $_GET["db"] ? idf_escape($db) . "." : "")
+		. ($ns != "" && $ns != $_GET["ns"] ? idf_escape($ns) . "." : "")
+		. table($foreign_key["table"])
 		. " (" . implode(", ", array_map('idf_escape', $foreign_key["target"])) . ")" //! reuse $name - check in older MySQL versions
 		. (preg_match("~^($on_actions)\$~", $foreign_key["on_delete"]) ? " ON DELETE $foreign_key[on_delete]" : "")
 		. (preg_match("~^($on_actions)\$~", $foreign_key["on_update"]) ? " ON UPDATE $foreign_key[on_update]" : "")
@@ -591,9 +596,9 @@ function doc_link($paths, $text = "<sup>?</sup>") {
 	$urls = array(
 		'sql' => "https://dev.mysql.com/doc/refman/$version/en/",
 		'sqlite' => "https://www.sqlite.org/",
-		'pgsql' => "https://www.postgresql.org/docs/$version/static/",
+		'pgsql' => "https://www.postgresql.org/docs/$version/",
 		'mssql' => "https://msdn.microsoft.com/library/",
-		'oracle' => "https://download.oracle.com/docs/cd/B19306_01/server.102/b14200/",
+		'oracle' => "https://www.oracle.com/pls/topic/lookup?ctx=db" . preg_replace('~^.* (\d+)\.(\d+)\.\d+\.\d+\.\d+.*~s', '\1\2', $server_info) . "&id=",
 	);
 	if (preg_match('~MariaDB~', $server_info)) {
 		$urls['sql'] = "https://mariadb.com/kb/en/library/";

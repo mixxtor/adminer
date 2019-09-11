@@ -31,13 +31,28 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
+Adminer 4.7.4-dev:
+
+Adminer 4.7.3 (released 2019-08-27):
+Allow editing foreign keys pointing to tables in other database/schema (bug #694)
+Fix blocking of concurrent instances in PHP >7.2 (bug #703)
+MySQL: Speed up displaying tables in large databases (bug #700, regression from 4.7.2)
+MySQL: Allow editing rows identified by negative floats (bug #695)
+MySQL: Skip editing generated columns
+SQLite: Quote strings stored in integer columns in export (bug #696)
+SQLite: Handle error in altering table (bug #697)
+SQLite: Allow setting auto increment for empty tables
+SQLite: Preserve auto increment when recreating table
+MS SQL: Support foreign keys to other DB
+MongoDB: Allow setting authSource from environment variable
+
 Adminer 4.7.2 (released 2019-07-18):
 Do not attempt logging in without password (bug #676)
 Stretch footer over the whole table width (bug #624)
 Allow overwriting tables when copying them
 Fix displaying SQL command after Save and continue edit
 Cache busting for adminer.css
-MySQL: Fix displaying multi-columns foreign keys (bug #675)
+MySQL: Fix displaying multi-columns foreign keys (bug #675, regression from 4.7.0)
 MySQL: Fix creating users and changing password in MySQL 8 (bug #663)
 MySQL: Pass SRID to GeomFromText
 PostgreSQL: Fix setting column comments on new table
