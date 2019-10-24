@@ -31,7 +31,8 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.7.4-dev:
+Adminer 4.7.4 (released 2019-10-22):
+Fix XSS if Adminer is accessible at URL /data:
 
 Adminer 4.7.3 (released 2019-08-27):
 Allow editing foreign keys pointing to tables in other database/schema (bug #694)
@@ -215,7 +216,7 @@ PostgreSQL: Export
 PostgreSQL: Don't treat partial indexes as unique
 MS SQL: Support pdo_dblib
 Elasticsearch: Support HTTPS by inputting https://server
- 
+
 Adminer 4.2.5 (released 2016-06-01):
 Fix remote execution in SQLite query
 SQLite: Require credentials to use
