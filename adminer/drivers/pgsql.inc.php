@@ -352,7 +352,7 @@ WHERE relkind IN ('r', 'm', 'v', 'f')
 
 		$identity_column = min_version(10) ? "(a.attidentity = 'd')::int" : '0';
 
-		foreach (get_rows("SELECT a.attname AS field, format_type(a.atttypid, a.atttypmod) AS full_type, d.adsrc AS default, a.attnotnull::int, col_description(c.oid, a.attnum) AS comment, $identity_column AS identity
+		foreach (get_rows("SELECT a.attname AS field, format_type(a.atttypid, a.atttypmod) AS full_type, pg_get_expr(d.adbin, d.adrelid) AS default, a.attnotnull::int, col_description(c.oid, a.attnum) AS comment, $identity_column AS identity
 FROM pg_class c
 JOIN pg_namespace n ON c.relnamespace = n.oid
 JOIN pg_attribute a ON c.oid = a.attrelid
@@ -689,9 +689,12 @@ AND typelem = 0"
 		return $connection->result("SELECT current_schema()");
 	}
 
-	function set_schema($schema) {
+	function set_schema($schema, $connection2 = null) {
 		global $connection, $types, $structured_types;
-		$return = $connection->query("SET search_path TO " . idf_escape($schema));
+		if (!$connection2) {
+			$connection2 = $connection;
+		}
+		$return = $connection2->query("SET search_path TO " . idf_escape($schema));
 		foreach (types() as $type) { //! get types from current_schemas('t')
 			if (!isset($types[$type])) {
 				$types[$type] = 0;

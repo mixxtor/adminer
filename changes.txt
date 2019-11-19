@@ -31,6 +31,13 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
+Adminer 4.7.5 (released 2019-11-13):
+Add id="" to cells with failed inline edit (bug #708)
+PostgreSQL: Fix getting default value in PostgreSQL 12 (bug #719)
+PostgreSQL, Oracle: Set schema for EXPLAIN queries in SQL command (bug #706)
+ClickHouse: SQL command
+Swedish translation
+
 Adminer 4.7.4 (released 2019-10-22):
 Fix XSS if Adminer is accessible at URL /data:
 
