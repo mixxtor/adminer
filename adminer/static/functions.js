@@ -576,6 +576,14 @@ function editingKeydown(event) {
 function functionChange() {
 	var input = this.form[this.name.replace(/^function/, 'fields')];
 	if (input) { // undefined with the set data type
+		if (input.length > 1) {	// cell has hidden field with same name (file input + hidden)
+			for (i=input.length-1; i>=0; i--) {
+				if (input[i].type != "hidden") {
+					input = input[ i ];
+					break;
+				}
+			}
+		}
 		if (selectValue(this)) {
 			if (input.origType === undefined) {
 				input.origType = input.type;

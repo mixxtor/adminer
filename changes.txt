@@ -1,4 +1,5 @@
 Adminer Next:
+Fix file-upload plugin to do not clear previous value if it was not touched on edit-page
 Fix edit multiple checked records
 Recognize emails with name (sample: name <email@foo.com>)
 Fix paginator page 1 (first) skin

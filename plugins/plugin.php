@@ -64,7 +64,12 @@ class AdminerPlugin extends Adminer {
 			if (method_exists($plugin, $function)) {
 				$value = call_user_func_array(array($plugin, $function), $args);
 				if ($value) {
-					$return += $value;
+					if (is_array($return)) {
+						$return = array_merge($return, $value);
+					}
+					else {
+						$return += $value;
+					}
 				}
 			}
 		}

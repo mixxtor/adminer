@@ -22,23 +22,30 @@ class AdminerFileUpload {
 		$this->extensions = $extensions;
 	}
 
+	function editFunctions($field) {
+		if (preg_match('~(.*)_path$~', $field["field"], $regs)) {
+			return array("string");
+		}
+	}
+
 	function editInput($table, $field, $attrs, $value) {
 		if (preg_match('~(.*)_path$~', $field["field"], $regs)) {
-			return "<a href='$this->displayPath$_GET[edit]/$regs[1]-$value'>" . $value . "</a><br /><input type='file'$attrs>";
+			return "<a href='$this->displayPath$_GET[edit]/$regs[1]-$value'>" . $value . "</a><input type='hidden'$attrs value='$value'><br /><input type='file'$attrs>";
 		}
 	}
 
 	function processInput($field, $value, $function = "") {
-		$name = "fields-$field[field]";
+		$fname = $field["field"];
 		// check $_FILES[$name], because search by this field does not have $_FILES
-		if (isset($_FILES[$name]) && preg_match('~(.*)_path$~', $field["field"], $regs)) {
+		if (isset($_FILES["fields"]["name"][$fname]) && preg_match('~(.*)_path$~', $fname, $regs)) {
 			$table = ($_GET["edit"] != "" ? $_GET["edit"] : $_GET["select"]);
-			if ($_FILES[$name]["error"] || !preg_match("~(\\.($this->extensions))?\$~", $_FILES[$name]["name"], $regs2)) {
+
+			if ($_FILES["fields"]["error"][$fname] || !preg_match("~(\\.($this->extensions))?\$~", $_FILES["fields"]["name"][$fname], $regs2)) {
 				return false;
 			}
 			//! unlink old
 			$filename = uniqid() . $regs2[0];
-			if (!move_uploaded_file($_FILES[$name]["tmp_name"], "$this->uploadPath$table/$regs[1]-$filename")) {
+			if (!move_uploaded_file($_FILES["fields"]["tmp_name"][$fname], "$this->uploadPath$table/$regs[1]-$filename")) {
 				return false;
 			}
 			return q($filename);

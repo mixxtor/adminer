@@ -29,7 +29,7 @@ function adminer_object()
 
     $plugins = array(
         // specify enabled plugins here
-        new AdminerFileUpload("data/"),
+        new AdminerFileUpload((str_repeat("../", substr_count(ADMINER_WEB_PATH, "/")))."data/"),
         new AdminerSlugify,
         new AdminerForeignSystem,
     );

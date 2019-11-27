@@ -128,7 +128,7 @@ class Adminer {
 		echo "<p><input type='submit' value='" . lang('Login') . "'>\n";
 		echo checkbox("auth[permanent]", 1, $_COOKIE["adminer_permanent"], lang('Permanent login')) . "\n";
 	}
-	
+
 	/** Get login form field
 	* @param string
 	* @param string HTML
