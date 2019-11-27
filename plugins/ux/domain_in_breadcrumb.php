@@ -17,9 +17,12 @@ class AdminerDomainInBreadcrumb
 			var breadcrumb = document.getElementById("breadcrumb");
 			if (breadcrumb)
 			{
-				var span = document.createElement("SPAN");
-				span.innerHTML = document.domain + " » ";
-				breadcrumb.insertBefore(span, breadcrumb.childNodes[0]);
+				breadcrumb.insertBefore(document.createTextNode(" » "), breadcrumb.childNodes[0]);
+
+				var link = document.createElement("A");
+				link.innerHTML = document.domain;
+				link.href = "/";
+				breadcrumb.insertBefore(link, breadcrumb.childNodes[0]);
 			}
 		});
 		</script>
