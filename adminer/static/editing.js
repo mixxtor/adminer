@@ -214,7 +214,7 @@ function editFields() {
 	for (var i = 0; i < els.length; i++) {
 		els[i].oninput = function () {
 			editingNameChange.call(this);
-			if (!this.defaultValue) {
+			if (!this.defaultValue && !this.ignoreDefaultValue) {
 				editingAddRow.call(this);
 			}
 		}

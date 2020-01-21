@@ -13,7 +13,7 @@ class AdminerTableEditByFields
 		if (Adminer::database() === null)
 			return;
 
-		if (!function_exists("get_page_table"))		// not modified adminer sources did not support this plugin
+		if (!function_exists("get_page_table"))		// not modified adminer sources does not support this plugin
 			return;
 ?>
 		<script<?=nonce()?>>

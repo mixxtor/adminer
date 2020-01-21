@@ -215,7 +215,7 @@ class AdminerTableStructureAdvanced
 									var input_id = "uxTableAction_ID"+inputs[i].name;
 									inputs[i].id = input_id;
 									var fixedInitScript = next_script.innerText.replace(/qsl\([^\)]+\)/, "qsl('#"+input_id+"')");
-									console.log(fixedInitScript);
+//									console.log(fixedInitScript);
 									initScriptLines.push( fixedInitScript );
 									next_script = next_script.nextSibling;
 								}
