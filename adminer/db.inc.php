@@ -88,6 +88,9 @@ if ($adminer->homepage()) {
 			echo '<td>' . lang('Data Free') . doc_link(array('sql' => 'show-table-status.html'));
 			echo '<td>' . lang('Auto Increment') . doc_link(array('sql' => 'example-auto-increment.html', 'mariadb' => 'auto_increment/'));
 			echo '<td>' . lang('Rows') . doc_link(array('sql' => 'show-table-status.html', 'pgsql' => 'catalog-pg-class.html#CATALOG-PG-CLASS', 'oracle' => 'REFRN20286'));
+			echo '<td>' . lang('Row Format') . doc_link(array('sql' => 'show-table-status.html'));
+			echo '<td>' . lang('Avg Row Length') . doc_link(array('sql' => 'show-table-status.html'));
+			echo '<td>' . lang('Create Options') . doc_link(array('sql' => 'show-table-status.html'));
 			echo (support("comment") ? '<td>' . lang('Comment') . doc_link(array('sql' => 'show-table-status.html', 'pgsql' => 'functions-info.html#FUNCTIONS-INFO-COMMENT-TABLE')) : '');
 			echo "</thead>\n";
 
@@ -109,6 +112,9 @@ if ($adminer->homepage()) {
 						"Data_free" => array("edit", lang('New item')),
 						"Auto_increment" => array("auto_increment=1&create", lang('Alter table')),
 						"Rows" => array("select", lang('Select data')),
+						"Row_format" => array("create", lang('Alter table')),
+						"Avg_row_length" => array("create", lang('Alter table')),
+						"Create_options" => array("create", lang('Alter table')),
 					) as $key => $link) {
 						$id = " id='$key-" . h($name) . "'";
 						echo ($link ? "<td align='right'>" . (support("table") || $key == "Rows" || (support("indexes") && $key != "Data_length")

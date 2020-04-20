@@ -6,7 +6,7 @@ if ($_GET["script"] == "db") {
 	foreach (table_status() as $name => $table_status) {
 		json_row("Comment-$name", h($table_status["Comment"]));
 		if (!is_view($table_status)) {
-			foreach (array("Engine", "Collation") as $key) {
+			foreach (array("Engine", "Collation", "Row_format", "Avg_row_length", "Create_options") as $key) {
 				json_row("$key-$name", h($table_status[$key]));
 			}
 			foreach ($sums + array("Auto_increment" => 0, "Rows" => 0) as $key => $val) {
