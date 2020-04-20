@@ -160,7 +160,7 @@ if (isset($_GET["clickhouse"])) {
 		return empty($rows) ? false : $rows[0];
 	}
 
-	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
 		$alter = $order = array();
 		foreach ($fields as $field) {
 			if ($field[1][2] === " NULL") {

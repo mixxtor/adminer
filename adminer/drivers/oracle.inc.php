@@ -294,7 +294,7 @@ ORDER BY uc.constraint_type, uic.column_position", $connection2) as $row) {
 	function found_rows($table_status, $where) {
 	}
 
-	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
 		$alter = $drop = array();
 		foreach ($fields as $field) {
 			$val = $field[1];

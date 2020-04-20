@@ -142,7 +142,9 @@ if ($_POST && !process_fields($row["fields"]) && !$error) {
 			($row["Engine"] && $row["Engine"] != $table_status["Engine"] ? $row["Engine"] : ""),
 			($row["Collation"] && $row["Collation"] != $table_status["Collation"] ? $row["Collation"] : ""),
 			($row["Auto_increment"] != "" ? number($row["Auto_increment"]) : ""),
-			$partitioning
+			$partitioning,
+			($row["Row_format"] && $row["Row_format"] != $table_status["Row_format"] ? $row["Row_format"] : ""),
+			($row["Create_options"] && $row["Create_options"] != $table_status["Create_options"] ? $row["Create_options"] : ""),
 		));
 	}
 }
@@ -195,6 +197,14 @@ foreach ($engines as $engine) {
 		break;
 	}
 }
+
+$row_formats = row_formats();
+foreach ($row_formats as $row_format) {
+	if (!strcasecmp($row_format, $row["Row_format"])) {
+		$row["Row_format"] = $row_format;
+		break;
+	}
+}
 ?>
 
 <form action="" method="post" id="form">
@@ -240,6 +250,12 @@ else
 		. ' <input name="Comment" value="' . h($row["Comment"]) . '" data-maxlength="' . (min_version(5.5) ? 2048 : 60) . '">'
 	: '')
 ; ?>
+<?php if ($row_formats && support("row_format")) { ?>
+<p>
+<?php echo lang('Row Format'); ?>:
+<?php echo "<select name='Row_format'>" . optionlist(array("" => "(" . lang('default') . ")") + $row_formats, $row["Row_format"]) . "</select>" . on_help("getTarget(event).value", 1) . script("qsl('select').onchange = helpClose;"); ?>
+<?php echo lang('Options'); ?>: <input name="Create_options" data-maxlength="64" value="<?php echo h($row["Create_options"]); ?>" autocapitalize="off">
+<?php } ?>
 <p>
 <input type="submit" value="<?php echo lang('Save'); ?>">
 <?php } ?>

@@ -112,7 +112,7 @@
 	function rollback() {
 		return queries("ROLLBACK");
 	}
-	
+
 	/** Return query with a timeout
 	* @param string
 	* @param int seconds
@@ -120,7 +120,7 @@
 	*/
 	function slowQuery($query, $timeout) {
 	}
-	
+
 	/** Convert column to be searchable
 	* @param string escaped column name
 	* @param array array("op" => , "val" => )
@@ -150,14 +150,14 @@
 	function quoteBinary($s) {
 		return q($s);
 	}
-	
+
 	/** Get warnings about the last command
 	* @return string HTML
 	*/
 	function warnings() {
 		return '';
 	}
-	
+
 	/** Get help link for table
 	* @param string
 	* @return string relative URL or null
@@ -165,4 +165,28 @@
 	function tableHelp($name) {
 	}
 
+	/** Get supported row formats
+	* @return array
+	*/
+	function row_formats() {
+		$return = array();
+		return $return;
+	}
+
+	/** Run commands to create or alter table
+	* @param string "" to create
+	* @param string new name
+	* @param array of array($orig, $process_field, $after)
+	* @param array of strings
+	* @param string
+	* @param string
+	* @param string
+	* @param string number
+	* @param string
+	* @param string
+	* @param string
+	* @return bool
+	*/
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
+	}
 }

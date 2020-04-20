@@ -464,6 +464,14 @@ if (!defined("DRIVER")) {
 		return $return;
 	}
 
+	/** Get supported row formats
+	* @return array
+	*/
+	function row_formats() {
+		$return = array("Compact", "Dynamic", "Compressed", "Redundant");
+		return $return;
+	}
+
 	/** Get logged user
 	* @return string
 	*/
@@ -511,6 +519,9 @@ if (!defined("DRIVER")) {
 			}
 			if (!isset($row["Engine"])) {
 				$row["Comment"] = "";
+			}
+			if (isset($row["Create_options"])) {
+				$row["Create_options"] = trim(str_ireplace("row_format=".$row["Row_format"], "", $row["Create_options"]));
 			}
 			if ($name != "") {
 				return $row;
@@ -759,7 +770,7 @@ if (!defined("DRIVER")) {
 	* @param string
 	* @return bool
 	*/
-	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
 		$alter = array();
 		foreach ($fields as $field) {
 			$alter[] = ($field[1]
@@ -772,6 +783,8 @@ if (!defined("DRIVER")) {
 			. ($engine ? " ENGINE=" . q($engine) : "")
 			. ($collation ? " COLLATE " . q($collation) : "")
 			. ($auto_increment != "" ? " AUTO_INCREMENT=$auto_increment" : "")
+			. ($row_format != "" ? "ROW_FORMAT=$row_format" : "")
+			. ($options != "" ? "$options" : "")
 		;
 		if ($table == "") {
 			return queries("CREATE TABLE " . table($name) . " (\n" . implode(",\n", $alter) . "\n)$status$partitioning");
@@ -1128,11 +1141,11 @@ if (!defined("DRIVER")) {
 	}
 
 	/** Check whether a feature is supported
-	* @param string "comment", "copy", "database", "descidx", "drop_col", "dump", "event", "indexes", "kill", "materializedview", "partitioning", "privileges", "procedure", "processlist", "routine", "scheme", "sequence", "status", "table", "trigger", "type", "variables", "view", "view_trigger"
+	* @param string "comment", "copy", "database", "descidx", "drop_col", "dump", "event", "indexes", "kill", "materializedview", "partitioning", "privileges", "procedure", "processlist", "routine", "scheme", "sequence", "status", "table", "trigger", "type", "variables", "view", "view_trigger", "row_format"
 	* @return bool
 	*/
 	function support($feature) {
-		return !preg_match("~scheme|sequence|type|view_trigger|materializedview" . (min_version(8) ? "" : "|descidx" . (min_version(5.1) ? "" : "|event|partitioning" . (min_version(5) ? "" : "|routine|trigger|view"))) . "~", $feature);
+		return !preg_match("~scheme|sequence|type|view_trigger|materializedview" . (min_version(8) ? "" : "|descidx" . (min_version(5.1) ? "" : "|event|partitioning" . (min_version(5) ? "" : "|routine|trigger|view|row_format"))) . "~", $feature);
 	}
 
 	function kill_process($val) {
