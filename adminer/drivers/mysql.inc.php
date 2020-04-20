@@ -768,6 +768,8 @@ if (!defined("DRIVER")) {
 	* @param string
 	* @param string number
 	* @param string
+	* @param string
+	* @param string
 	* @return bool
 	*/
 	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
@@ -783,8 +785,8 @@ if (!defined("DRIVER")) {
 			. ($engine ? " ENGINE=" . q($engine) : "")
 			. ($collation ? " COLLATE " . q($collation) : "")
 			. ($auto_increment != "" ? " AUTO_INCREMENT=$auto_increment" : "")
-			. ($row_format != "" ? "ROW_FORMAT=$row_format" : "")
-			. ($options != "" ? "$options" : "")
+			. ($row_format != "" ? " ROW_FORMAT=$row_format" : "")
+			. ($options != "" ? " $options" : "")
 		;
 		if ($table == "") {
 			return queries("CREATE TABLE " . table($name) . " (\n" . implode(",\n", $alter) . "\n)$status$partitioning");
