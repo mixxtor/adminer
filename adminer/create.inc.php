@@ -144,7 +144,7 @@ if ($_POST && !process_fields($row["fields"]) && !$error) {
 			($row["Auto_increment"] != "" ? number($row["Auto_increment"]) : ""),
 			$partitioning,
 			($row["Row_format"] && $row["Row_format"] != $table_status["Row_format"] ? $row["Row_format"] : ""),
-			($row["Create_options"] && $row["Create_options"] != $table_status["Create_options"] ? $row["Create_options"] : ""),
+			($row["Create_options"] && $row["Create_options"] != $table_status["Create_options"] ? $row["Create_options"] : "")
 		));
 	}
 }
