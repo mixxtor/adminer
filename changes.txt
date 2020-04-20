@@ -1,4 +1,5 @@
 Adminer Next:
+Support table row format display and edit
 Fix file-upload plugin to do not clear previous value if it was not touched on edit-page
 Fix edit multiple checked records
 Recognize emails with name (sample: name <email@foo.com>)
@@ -31,6 +32,8 @@ UX plugins for simpler migrate phpMyAdmin users:
  - table_sort_desc_before_title:	output `desc` link before columnt title
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
+
+Adminer 4.7.7-dev:
 
 Adminer 4.7.6 (released 2020-01-31):
 Speed up alter table form (regression from 4.4.0)
