@@ -33,7 +33,8 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.7.7-dev:
+Adminer 4.7.7 (released 2020-05-11):
+Fix open redirect if Adminer is accessible at //adminer.php%2F@
 
 Adminer 4.7.6 (released 2020-01-31):
 Speed up alter table form (regression from 4.4.0)
