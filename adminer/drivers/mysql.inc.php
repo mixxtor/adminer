@@ -1130,6 +1130,9 @@ if (!defined("DRIVER")) {
 	* @return string
 	*/
 	function unconvert_field($field, $return) {
+		if (!$field) {
+			return null;
+		}
 		if (preg_match("~binary~", $field["type"])) {
 			$return = "UNHEX(REPLACE($return, '-', ''))";	// remove "-", because in some cases source value can be UUID
 		}

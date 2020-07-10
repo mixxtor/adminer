@@ -34,7 +34,7 @@ if ($_POST && !$error && !isset($_GET["select"])) {
 		if (!$update_few_items) {
 			$set = array();
 			foreach ($fields as $name => $field) {
-				$val = process_input($field, $check_id);
+				$val = process_input($field);
 				if ($val !== false && $val !== null) {
 					$set[idf_escape($name)] = $val;
 				}

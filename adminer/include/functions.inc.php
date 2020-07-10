@@ -62,7 +62,7 @@ function number_type() {
 * @return null modified in place
 */
 function remove_slashes($process, $filter = false) {
-	if (get_magic_quotes_gpc()) {
+	if (function_exists("get_magic_quotes_gpc()") && get_magic_quotes_gpc()) {
 		while (list($key, $val) = each($process)) {
 			foreach ($val as $k => $v) {
 				unset($process[$key][$k]);
@@ -484,7 +484,7 @@ function where($where, $fields = array()) {
 				: " = " . unconvert_field($fields[$key], q($val))
 			))
 		; //! enum and set
-		if ($jush == "sql" && preg_match('~char|text~', $fields[$key]["type"]) && preg_match("~[^ -@]~", $val)) { // not just [a-z] to catch non-ASCII characters
+		if ($jush == "sql" && isset($fields[$key]) && preg_match('~char|text~', $fields[$key]["type"]) && preg_match("~[^ -@]~", $val)) { // not just [a-z] to catch non-ASCII characters
 			$return[] = "$column = " . q($val) . " COLLATE " . charset($connection) . "_bin";
 		}
 	}
@@ -1486,7 +1486,7 @@ function edit_form($TABLE, $fields, $row, $update) {
 
 			foreach ($fields as $name => $field) {
 				echo "<tr><th>" . $adminer->fieldName($field) . ($field["comment"] ? "<br /><small>".$field["comment"]."</small>" : "");
-				$default = $_GET["set"][bracket_escape($name)];
+				$default = isset($_GET["set"][bracket_escape($name)]) ? $_GET["set"][bracket_escape($name)] : null;
 				if ($default === null) {
 					$default = $field["default"];
 					if ($field["type"] == "bit" && preg_match("~^b'([01]*)'\$~", $default, $regs)) {
