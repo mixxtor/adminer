@@ -10,7 +10,8 @@ class AdminerExportPerTable
 {
 	function head()
 	{
-		if (Adminer::database() === null)
+		global $adminer;
+		if ($adminer->database() === null)
 			return;
 		if (function_exists("get_page_table") && (get_page_table() === ""))
 			return;

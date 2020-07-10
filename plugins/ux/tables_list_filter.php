@@ -10,7 +10,8 @@ class AdminerTablesListFilter
 {
 	function head()
 	{
-		if (Adminer::database() === null)
+		global $adminer;
+		if ($adminer->database() === null)
 			return;
 ?>
 		<script<?=nonce()?>>

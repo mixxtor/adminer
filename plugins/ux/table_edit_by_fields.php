@@ -10,7 +10,8 @@ class AdminerTableEditByFields
 {
 	function head()
 	{
-		if (Adminer::database() === null)
+		global $adminer;
+		if ($adminer->database() === null)
 			return;
 
 		if (!function_exists("get_page_table"))		// not modified adminer sources does not support this plugin
