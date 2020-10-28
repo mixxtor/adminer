@@ -1,5 +1,51 @@
 <?php
 error_reporting(6135); // errors and warnings
+// ignore some errors (PHP 8 compatibility)
+function ErrorHandler($errType, $errStr, $errFile, $errLine)
+{
+	if (!(error_reporting() & $errType)) {		// error_reporting() return 0 if before command we have '@' (php 8 mod)
+		return true;
+	}
+
+	switch ($errType) {
+		case E_ERROR:
+		case E_PARSE:
+		case E_CORE_ERROR:
+		case E_COMPILE_ERROR:
+			break;
+
+		case E_USER_ERROR:
+		case E_RECOVERABLE_ERROR:
+			break;
+
+		case E_WARNING:
+		case E_NOTICE:
+		case E_STRICT:
+		case E_COMPILE_WARNING:
+		case E_CORE_WARNING:
+		case E_USER_WARNING:
+		case E_USER_NOTICE:
+		case E_DEPRECATED:
+		case E_USER_DEPRECATED:
+			$descr = "";
+			if ($pos = strpos($errStr, ':')) {		// we can have problems with strtok() in strtok() => use other method
+				$descr = substr($errStr, 0, $pos);
+			}
+			if (
+				($descr == "Undefined index")
+				|| (strpos($errStr, "Undefined array key") === 0)	// PHP 8 renamed description
+				|| (strpos($errStr, "Trying to access array offset on value of type") === 0)
+				|| ($descr == "Undefined offset")
+				) {
+				return true;
+			}
+			break;
+	}
+
+	return false;
+}
+set_error_handler('ErrorHandler');
+//
 
 include "../adminer/include/coverage.inc.php";
 

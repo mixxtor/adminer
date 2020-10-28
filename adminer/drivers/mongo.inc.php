@@ -560,6 +560,8 @@ if (isset($_GET["mongo"])) {
 			"(date)>=",
 			"(date)<=",
 		);
+	} else {
+		$operators = array();
 	}
 
 	function table($idf) {

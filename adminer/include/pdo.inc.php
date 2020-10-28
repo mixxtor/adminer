@@ -24,7 +24,7 @@ if (extension_loaded('pdo')) {
 		
 		/*abstract function select_db($database);*/
 		
-		function query($query, $unbuffered = false) {
+		function query(string $query, ?int $fetch_mode = PDO::FETCH_INTO, ...$fetch_mode_args) {
 			$result = parent::query($query);
 			$this->error = "";
 			if (!$result) {

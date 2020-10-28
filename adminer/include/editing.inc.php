@@ -98,6 +98,7 @@ function select($result, $connection2 = null, $orgtables = array(), $limit = 0) 
 * @return array ($table_name => $field)
 */
 function referencable_primary($self) {
+	$return = array(); // table_name => field
 	if (function_exists("db_pk_fields")) {
 		// faster method - (mysql execute only two queries)
 		$tables_list = table_status('', true);
@@ -114,7 +115,6 @@ function referencable_primary($self) {
 		}
 	} else {
 		// Too slow when DB has many tables (too many queries)
-		$return = array(); // table_name => field
 		foreach (table_status('', true) as $table_name => $table) {
 			if ($table_name != $self && fk_support($table)) {
 				foreach (fields($table_name) as $field) {
