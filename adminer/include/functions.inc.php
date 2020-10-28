@@ -864,7 +864,7 @@ function friendly_url($val) {
 */
 function hidden_fields($process, $ignore = array()) {
 	$return = false;
-	while (list($key, $val) = each($process)) {
+	foreach ($process as $key => $val) {
 		if (!in_array($key, $ignore)) {
 			if (is_array($val)) {
 				foreach ($val as $k => $v) {
