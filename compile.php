@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-error_reporting(6135); // errors and warnings
+error_reporting(6133); // errors
 include dirname(__FILE__) . "/adminer/include/version.inc.php";
 include dirname(__FILE__) . "/externals/JsShrink/jsShrink.php";
 
@@ -319,6 +319,14 @@ function compile_file($match) {
 		$file = call_user_func($callback, $file);
 	}
 	return '"' . add_quo_slashes($file) . '"';
+}
+
+if (!function_exists("each")) {
+	function each(&$arr) {
+		$key = key($arr);
+		next($arr);
+		return $key === null ? false : array($key, $arr[$key]);
+	}
 }
 
 function min_version() {

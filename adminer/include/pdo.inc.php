@@ -1,9 +1,9 @@
 <?php
 // PDO can be used in several database drivers
 if (extension_loaded('pdo')) {
-	/*abstract*/ class Min_PDO extends PDO {
-		var $_result, $server_info, $affected_rows, $errno, $error;
-		
+	/*abstract*/ class Min_PDO {
+		var $_result, $server_info, $affected_rows, $errno, $error, $pdo;
+
 		function __construct() {
 			global $adminer;
 			$pos = array_search("SQL", $adminer->operators);
@@ -11,24 +11,29 @@ if (extension_loaded('pdo')) {
 				unset($adminer->operators[$pos]);
 			}
 		}
-		
+
 		function dsn($dsn, $username, $password, $options = array()) {
 			try {
-				parent::__construct($dsn, $username, $password, $options);
+				$this->pdo = new PDO($dsn, $username, $password, $options);
 			} catch (Exception $ex) {
 				auth_error(h($ex->getMessage()));
 			}
-			$this->setAttribute(13, array('Min_PDOStatement')); // 13 - PDO::ATTR_STATEMENT_CLASS
-			$this->server_info = @$this->getAttribute(4); // 4 - PDO::ATTR_SERVER_VERSION
+			$this->pdo->setAttribute(3, 1); //  3 - PDO::ATTR_ERRMODE, 1 - PDO::ERRMODE_WARNING
+			$this->pdo->setAttribute(13, array('Min_PDOStatement')); // 13 - PDO::ATTR_STATEMENT_CLASS
+			$this->server_info = @$this->pdo->getAttribute(4); // 4 - PDO::ATTR_SERVER_VERSION
 		}
-		
+
 		/*abstract function select_db($database);*/
-		
-		function query(string $query, ?int $fetch_mode = PDO::FETCH_INTO, ...$fetch_mode_args) {
-			$result = parent::query($query);
+
+		function quote($string) {
+			return $this->pdo->quote($string);
+		}
+
+		function query($query, $unbuffered = false) {
+			$result = $this->pdo->query($query);
 			$this->error = "";
 			if (!$result) {
-				list(, $this->errno, $this->error) = $this->errorInfo();
+				list(, $this->errno, $this->error) = $this->pdo->errorInfo();
 				if (!$this->error) {
 					$this->error = lang('Unknown error.');
 				}
@@ -37,11 +42,11 @@ if (extension_loaded('pdo')) {
 			$this->store_result($result);
 			return $result;
 		}
-		
+
 		function multi_query($query) {
 			return $this->_result = $this->query($query);
 		}
-		
+
 		function store_result($result = null) {
 			if (!$result) {
 				$result = $this->_result;
@@ -56,7 +61,7 @@ if (extension_loaded('pdo')) {
 			$this->affected_rows = $result->rowCount();
 			return true;
 		}
-		
+
 		function next_result() {
 			if (!$this->_result) {
 				return false;
@@ -64,7 +69,7 @@ if (extension_loaded('pdo')) {
 			$this->_result->_offset = 0;
 			return @$this->_result->nextRowset(); // @ - PDO_PgSQL doesn't support it
 		}
-		
+
 		function result($query, $field = 0) {
 			$result = $this->query($query);
 			if (!$result) {
@@ -74,18 +79,18 @@ if (extension_loaded('pdo')) {
 			return $row[$field];
 		}
 	}
-	
+
 	class Min_PDOStatement extends PDOStatement {
 		var $_offset = 0, $num_rows;
-		
+
 		function fetch_assoc() {
 			return $this->fetch(2); // PDO::FETCH_ASSOC
 		}
-		
+
 		function fetch_row() {
 			return $this->fetch(3); // PDO::FETCH_NUM
 		}
-		
+
 		function fetch_field() {
 			$row = (object) $this->getColumnMeta($this->_offset++);
 			$row->orgtable = $row->table;

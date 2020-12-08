@@ -62,7 +62,7 @@ function number_type() {
 * @return null modified in place
 */
 function remove_slashes($process, $filter = false) {
-	if (function_exists("get_magic_quotes_gpc()") && get_magic_quotes_gpc()) {
+	if (function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) {
 		while (list($key, $val) = each($process)) {
 			foreach ($val as $k => $v) {
 				unset($process[$key][$k]);
@@ -736,7 +736,7 @@ function format_time($start) {
 * @return string
 */
 function relative_uri() {
-	return preg_replace('~^[^?]*/([^?]*)~', '\1', $_SERVER["REQUEST_URI"]);
+	return str_replace(":", "%3a", preg_replace('~^[^?]*/([^?]*)~', '\1', $_SERVER["REQUEST_URI"]));
 }
 
 /** Remove parameter from query string
@@ -860,19 +860,18 @@ function friendly_url($val) {
 /** Print hidden fields
 * @param array
 * @param array
+* @param string
 * @return bool
 */
-function hidden_fields($process, $ignore = array()) {
+function hidden_fields($process, $ignore = array(), $prefix = '') {
 	$return = false;
 	foreach ($process as $key => $val) {
 		if (!in_array($key, $ignore)) {
 			if (is_array($val)) {
-				foreach ($val as $k => $v) {
-					$process[$key . "[$k]"] = $v;
-				}
+				hidden_fields($val, array(), $key);
 			} else {
 				$return = true;
-				echo '<input type="hidden" name="' . h($key) . '" value="' . h($val) . '">';
+				echo '<input type="hidden" name="' . h($prefix ? $prefix . "[$key]" : $key) . '" value="' . h($val) . '">';
 			}
 		}
 	}
