@@ -315,6 +315,16 @@ function checkboxClick(event) {
 	}
 }
 
+/** Reset `display` style for element
+* @param string
+*/
+function resetDisplayStyle(id) {
+	var box = document.getElementById(id);
+	if (box.style.display === "none") {
+		box.style.display = "";
+	}
+}
+
 /** Set HTML code of an element
 * @param string
 * @param string undefined to set parentNode to empty string
@@ -702,7 +712,7 @@ function ajaxForm(form, message, button) {
 		}
 	}
 	data = data.join('&');
-	
+
 	var url = form.action;
 	if (!/post/i.test(form.method)) {
 		url = url.replace(/\?.*/, '') + '?' + data;

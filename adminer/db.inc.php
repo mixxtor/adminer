@@ -76,7 +76,7 @@ if ($adminer->homepage()) {
 				}
 			}
 			echo "<div class='scrollable'>\n";
-			echo "<table cellspacing='0' class='nowrap checkable'>\n";
+			echo "<table cellspacing='0' id='tables-list' style='display:none' class='nowrap checkable'>\n";
 			echo script("mixin(qsl('table'), {onclick: tableClick, ondblclick: partialArg(tableClick, true)});");
 			echo '<thead><tr class="wrap">';
 			echo '<td><input id="check-all" type="checkbox" class="jsonly">' . script("qs('#check-all').onclick = partial(formCheck, /^(tables|views)\[/);", "");
@@ -135,6 +135,7 @@ if ($adminer->homepage()) {
 			}
 
 			echo "</table>\n";
+			echo script("resetDisplayStyle('tables-list');");
 			echo "</div>\n";
 			if (!information_schema(DB)) {
 				echo "<div class='footer'><div>\n";

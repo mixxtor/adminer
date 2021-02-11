@@ -236,10 +236,7 @@ function editFields(box_id) {
 	}
 
 	if (box_id) {
-		var box = document.getElementById(box_id);
-		if (box.style.display === "none") {
-			box.style.display = "";
-		}
+		resetDisplayStyle(box_id);
 	}
 }
 
