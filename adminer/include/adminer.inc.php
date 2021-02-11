@@ -526,7 +526,7 @@ class Adminer {
 		echo "</script>\n";
 		echo "</div></fieldset>\n";
 	}
-	
+
 	/** Print command box in select
 	* @return bool whether to print default commands
 	*/

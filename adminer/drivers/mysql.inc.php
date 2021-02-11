@@ -1133,7 +1133,9 @@ if (!defined("DRIVER")) {
 			return null;
 		}
 		if (preg_match("~binary~", $field["type"])) {
-			$return = "UNHEX(REPLACE($return, '-', ''))";	// remove "-", because in some cases source value can be UUID
+			if (strpos($return, "-") > 0)
+				$return = "REPLACE($return, '-', '')";	// remove "-", because in some cases source value can be UUID
+			$return = "UNHEX($return)";
 		}
 		if ($field["type"] == "bit") {
 			$return = "CONV($return, 2, 10) + 0";
