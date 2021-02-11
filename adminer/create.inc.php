@@ -219,7 +219,7 @@ foreach ($row_formats as $row_format) {
 
 <?php if (support("columns")) { ?>
 <div class="scrollable">
-<table cellspacing="0" id="edit-fields" class="nowrap">
+<table cellspacing="0" id="edit-fields" class="nowrap" style="display:none;">
 <?php
 $comments = ($_POST ? $_POST["comments"] : adminer_setting("comments"));
 $defaults = ($_POST ? $_POST["defaults"] : adminer_setting("defaults"));
@@ -240,7 +240,7 @@ else
 	edit_fields($row["fields"], $collations, "TABLE", $foreign_keys);
 ?>
 </table>
-<?php echo script("editFields();"); ?>
+<?php echo script("editFields('edit-fields');"); ?>
 </div>
 <p>
 <?php echo lang('Auto Increment'); ?>: <input type="number" name="Auto_increment" size="6" value="<?php echo h($row["Auto_increment"]); ?>">
