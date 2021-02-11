@@ -80,12 +80,25 @@ include "../adminer/drivers/sqlite.inc.php";
 include "../adminer/drivers/pgsql.inc.php";
 include "../adminer/drivers/oracle.inc.php";
 include "../adminer/drivers/mssql.inc.php";
-include "../adminer/drivers/firebird.inc.php";
-include "../adminer/drivers/simpledb.inc.php";
 include "../adminer/drivers/mongo.inc.php";
 include "../adminer/drivers/elastic.inc.php";
-include "../adminer/drivers/clickhouse.inc.php";
+include "./include/adminer.inc.php";
+$adminer = (function_exists('adminer_object') ? adminer_object() : new Adminer);
 include "../adminer/drivers/mysql.inc.php"; // must be included as last driver
+
+$config = driver_config();
+$possible_drivers = $config['possible_drivers'];
+$jush = $config['jush'];
+$types = $config['types'];
+$structured_types = $config['structured_types'];
+$unsigned = $config['unsigned'];
+$operators = $config['operators'];
+$functions = $config['functions'];
+$grouping = $config['grouping'];
+$edit_functions = $config['edit_functions'];
+if ($adminer->operators === null) {
+	$adminer->operators = $operators;
+}
 
 define("SERVER", $_GET[DRIVER]); // read from pgsql=localhost
 define("DB", $_GET["db"]); // for the sake of speed and size
@@ -97,7 +110,6 @@ define("ME", preg_replace('~\?.*~', '', relative_uri()) . '?'
 );
 
 include "../adminer/include/version.inc.php";
-include "./include/adminer.inc.php";
 include "../adminer/include/design.inc.php";
 include "../adminer/include/xxtea.inc.php";
 include "../adminer/include/auth.inc.php";

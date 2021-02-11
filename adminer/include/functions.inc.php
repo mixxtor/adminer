@@ -1151,7 +1151,7 @@ function dump_headers($identifier, $multi_table = false) {
 	$return = $adminer->dumpHeaders($identifier, $multi_table);
 	$output = $_POST["output"];
 	if ($output != "text") {
-		header("Content-Disposition: attachment; filename=" . $adminer->dumpFilename($identifier) . ".$return" . ($output != "file" && !preg_match('~[^0-9a-z]~', $output) ? ".$output" : ""));
+		header("Content-Disposition: attachment; filename=" . $adminer->dumpFilename($identifier) . ".$return" . ($output != "file" && preg_match('~^[0-9a-z]+$~', $output) ? ".$output" : ""));
 	}
 	session_write_close();
 	ob_flush();
@@ -1165,7 +1165,7 @@ function dump_headers($identifier, $multi_table = false) {
 */
 function dump_csv($row) {
 	foreach ($row as $key => $val) {
-		if (preg_match("~[\"\n,;\t]~", $val) || $val === "") {
+		if (preg_match('~["\n,;\t]|^0|\.\d*0$~', $val) || $val === "") {
 			$row[$key] = '"' . str_replace('"', '""', $val) . '"';
 		}
 	}
@@ -1449,24 +1449,25 @@ function on_help($command, $side = 0) {
 * @param bool
 * @return null
 */
-function edit_form($TABLE, $fields, $row, $update) {
+function edit_form($table, $fields, $row, $update) {
 	global $adminer, $jush, $token, $error;
-	$table_status = table_status1($TABLE, true);
+	$table_status = table_status1($table, true);
 	$table_name = $adminer->tableName($table_status);
 	page_header(
 		($update ? lang('Edit') : lang('Insert')),
 		$error,
-		array("select" => array($TABLE, $table_name)),
+		array("select" => array($table, $table_name)),
 		$table_name
 	);
 	$adminer->selectLinks($table_status);
+	$adminer->editRowPrint($table, $fields, $row, $update);
 	if ($row === false) {
 		echo "<p class='error'>" . lang('No rows.') . "\n";
 	}
 
 	$form_action = "";
 	if (is_array($update))
-		$form_action = h(ME . "edit=" . urlencode($TABLE));
+		$form_action = h(ME . "edit=" . urlencode($table));
 	?>
 <form action="<?=$form_action;?>" method="post" enctype="multipart/form-data" id="form">
 <?php
@@ -1495,7 +1496,7 @@ function edit_form($TABLE, $fields, $row, $update) {
 				$value = ($row !== null
 					? ($row[$name] != "" && $jush == "sql" && preg_match("~enum|set~", $field["type"])
 						? (is_array($row[$name]) ? array_sum($row[$name]) : +$row[$name])
-						: $row[$name]
+						: (is_bool($row[$name]) ? +$row[$name] : $row[$name])
 					)
 					: (!$update && $field["auto_increment"]
 						? ""
@@ -1512,6 +1513,9 @@ function edit_form($TABLE, $fields, $row, $update) {
 						: ($value === false ? null : ($value !== null ? '' : 'NULL'))
 					)
 				);
+				if (!$_POST && !$update && $value == $field["default"] && preg_match('~^[\w.]+\(~', $value)) {
+					$function = "SQL";
+				}
 				if (preg_match("~time~", $field["type"]) && preg_match('~^CURRENT_TIMESTAMP~i', $value)) {
 					$value = "";
 					$function = "now";
@@ -1519,15 +1523,16 @@ function edit_form($TABLE, $fields, $row, $update) {
 				input($field, $value, $function, $row_key);
 				echo "\n";
 			}
+
 			if (!support("table")) {
 				echo "<tr>"
-				. "<th><input name='field_keys[]'>"
-				. script("qsl('input').oninput = fieldChange;")
-					. "<td class='function'>" . html_select("field_funs[]", $adminer->editFunctions(array("null" => isset($_GET["select"]))))
-					. "<td><input name='field_vals[]'>"
-					. "\n"
-				;
-			}
+					. "<th><input name='field_keys[]'>"
+					. script("qsl('input').oninput = fieldChange;")
+						. "<td class='function'>" . html_select("field_funs[]", $adminer->editFunctions(array("null" => isset($_GET["select"]))))
+						. "<td><input name='field_vals[]'>"
+						. "\n"
+					;
+				}
 			echo "</table>\n";
 		}
 	}
