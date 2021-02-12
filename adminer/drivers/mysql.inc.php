@@ -722,17 +722,17 @@ if (!defined("DRIVER")) {
 	function rename_database($name, $collation) {
 		$return = false;
 		if (create_database($name, $collation)) {
-			//! move triggers
-			$rename = array();
+			$tables = array();
+			$views = array();
 			foreach (tables_list() as $table => $type) {
-				$rename[] = table($table) . " TO " . idf_escape($name) . "." . table($table);
+				if ($type == 'VIEW') {
+					$views[] = $table;
+				} else {
+					$tables[] = $table;
+				}
 			}
-			$return = (!$rename || queries("RENAME TABLE " . implode(", ", $rename)));
-			if ($return) {
-				queries("DROP DATABASE " . idf_escape(DB));
-			}
-			restart_session();
-			set_session("dbs", null);
+			$return = (!$tables && !$views) || move_tables($tables, $views, $name);
+			drop_databases($return ? array(DB) : array());
 		}
 		return $return;
 	}
@@ -844,15 +844,28 @@ if (!defined("DRIVER")) {
 	* @param string
 	* @return bool
 	*/
-	function move_tables($tables, $views, $target, $target_table = "") {
+	function move_tables($tables, $views, $target) {
+		global $connection;
 		$rename = array();
-		if ((count($tables) + count($views)) > 1)
-			$target_table = "";
-		foreach (array_merge($tables, $views) as $table) { // views will report SQL error
-			$rename[] = table($table) . " TO " . idf_escape($target) . "." . (empty($target_table) ? table($table) : table($target_table));
+		foreach ($tables as $table) {
+			$rename[] = table($table) . " TO " . idf_escape($target) . "." . table($table);
 		}
-		return queries("RENAME TABLE " . implode(", ", $rename));
+		if (!$rename || queries("RENAME TABLE " . implode(", ", $rename))) {
+			$definitions = array();
+			foreach ($views as $table) {
+				$definitions[table($table)] = view($table);
+			}
+			$connection->select_db($target);
+			$db = idf_escape(DB);
+			foreach ($definitions as $name => $view) {
+				if (!queries("CREATE VIEW $name AS " . str_replace(" $db.", " ", $view["select"])) || !queries("DROP VIEW $db.$name")) {
+					return false;
+				}
+			}
+			return true;
+		}
 		//! move triggers
+		return false;
 	}
 
 	/** Copy tables to other schema

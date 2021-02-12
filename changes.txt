@@ -33,6 +33,10 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
+Adminer 4.8.1-dev:
+Fix more PHP 8 warnings (bug #781)
+MySQL: Allow moving views to other DB and renaming DB with views (bug #783)
+
 Adminer 4.8.0 (released 2021-02-10):
 Support function default values in insert (bug #713)
 Allow SQL pseudo-function in insert
