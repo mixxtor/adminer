@@ -33,13 +33,15 @@ UX plugins for simpler migrate phpMyAdmin users:
  - db_diagnostics_queries:			display shortcut to diagnostic queries for database/driver. Currently only for MySQL.
  - sql_command_transaction:			detect "START TRANSACTION" to setup "Stop on error" checkbox
 
-Adminer 4.8.1-dev:
+Adminer 4.8.1 (released 2021-05-14):
+Internet Explorer or PDO in Adminer 4.7.8-4.8.0: Fix XSS in doc_link (bug #797)
 Fix more PHP 8 warnings (bug #781)
 Avoid PHP warnings with PDO drivers (bug #786, regression from 4.7.8)
 MySQL: Allow moving views to other DB and renaming DB with views (bug #783)
 MariaDB: Do not treat sequences as views (PR #416)
 PostgreSQL: Support UPDATE OF triggers (bug #789)
 PostgreSQL: Support triggers with more events (OR)
+PostgreSQL: Fix parsing of foreign keys with non-ASCII column names
 PostgreSQL < 10 PDO: Avoid displaying GENERATED ALWAYS BY IDENTITY everywhere (bug #785, regression from 4.7.9)
 SQLite: Fix displayed types (bug #784, regression from 4.8.0)
 
