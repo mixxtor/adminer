@@ -1099,7 +1099,7 @@ bodyLoad('<?php echo (is_object($connection) ? preg_replace('~^(\d\.?\d).*~s', '
 	* @return null
 	*/
 	function tablesPrint($tables) {
-		echo "<ul id='tables'>" . script("mixin(qs('#tables'), {onmouseover: menuOver, onmouseout: menuOut});");
+		echo "<ul id='tables'>";
 		foreach ($tables as $table => $status) {
 			$name = $this->tableName($status);
 			if ($name != "") {
@@ -1115,7 +1115,7 @@ bodyLoad('<?php echo (is_object($connection) ? preg_replace('~^(\d\.?\d).*~s', '
 				) . "\n";
 			}
 		}
-		echo "</ul>\n";
+		echo "</ul>\n" . script("mixin(qs('#tables'), {onmouseover: menuOver, onmouseout: menuOut});");
 	}
 
 }
