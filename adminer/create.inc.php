@@ -247,9 +247,13 @@ else
 <?php echo checkbox("defaults", 1, $defaults, lang('Default values'), "columnShow(this.checked, 5)", "jsonly"); ?>
 <?php echo (support("comment")
 	? checkbox("comments", 1, $comments, lang('Comment'), "editingCommentsClick(this, true);", "jsonly")
-		. ' <input name="Comment" value="' . h($row["Comment"]) . '" data-maxlength="' . (min_version(5.5) ? 2048 : 60) . '">'
+		. ' ' . (preg_match('~\n~', $row["Comment"])
+			? "<textarea name='Comment' rows='2' cols='20'" . ($comments ? "" : " class='hidden'") . ">" . h($row["Comment"]) . "</textarea>"
+			: '<input name="Comment" value="' . h($row["Comment"]) . '" data-maxlength="' . (min_version(5.5) ? 2048 : 60) . '"' . ($comments ? "" : " class='hidden'") . '>'
+		)
 	: '')
-; ?>
+;
+?>
 <?php if ($row_formats && support("row_format")) { ?>
 <p>
 <?php echo lang('Row Format'); ?>:
