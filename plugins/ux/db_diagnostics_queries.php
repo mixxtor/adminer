@@ -206,6 +206,11 @@ class AdminerDbDiagnosticsQueries
 
 								funcAddShortcutToQuery("Show InnoDB Monitor log", "## Show log of InnoDB monitor to detect issues like deadlocks.\n\n\
 																				SHOW ENGINE INNODB STATUS;");
+
+								funcAddShortcutToQuery("Show partitioned tables", "## Show partitioned tables.\n\n\
+																				SELECT TABLE_NAME, PARTITION_NAME, TABLE_ROWS, AVG_ROW_LENGTH, DATA_LENGTH\n\
+																				FROM INFORMATION_SCHEMA.PARTITIONS\n\
+																				WHERE TABLE_SCHEMA = 'p';");
 <?php
 							break;
 						}
