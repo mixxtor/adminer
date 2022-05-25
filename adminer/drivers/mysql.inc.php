@@ -1143,7 +1143,7 @@ if (!defined("DRIVER")) {
 	*/
 	function unconvert_field($field, $return) {
 		if (!$field) {
-			return null;
+			return $return;
 		}
 		if (preg_match("~binary~", $field["type"])) {
 			if (strpos($return, "-") > 0)
