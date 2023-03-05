@@ -83,14 +83,14 @@ function messagesPrint(el) {
 
 
 
-/** Hide or show some login rows for selected driver	
-* @param HTMLSelectElement	
-*/	
-function loginDriver(driver) {	
-	var trs = parentTag(driver, 'table').rows;	
-	var disabled = /sqlite/.test(selectValue(driver));	
+/** Hide or show some login rows for selected driver
+* @param HTMLSelectElement
+*/
+function loginDriver(driver) {
+	var trs = parentTag(driver, 'table').rows;
+	var disabled = /sqlite/.test(selectValue(driver));
 	alterClass(trs[1], 'hidden', disabled);	// 1 - row with server
-	trs[1].getElementsByTagName('input')[0].disabled = disabled;	
+	trs[1].getElementsByTagName('input')[0].disabled = disabled;
 }
 
 
@@ -209,21 +209,23 @@ function idfEscape(s) {
 
 /** Set up event handlers for edit_fields().
 */
-function editFields() {
-	var els = qsa('[name$="[field]"]');
+function editFields(box_id) {
+	$box_id = (box_id ? "#"+box_id+" " : "");
+
+	var els = qsa($box_id+'[name$="[field]"]');
 	for (var i = 0; i < els.length; i++) {
 		els[i].oninput = function () {
 			editingNameChange.call(this);
-			if (!this.defaultValue) {
+			if (!this.defaultValue && !this.ignoreDefaultValue) {
 				editingAddRow.call(this);
 			}
 		}
 	}
-	els = qsa('[name$="[length]"]');
+	els = qsa($box_id+'[name$="[length]"]');
 	for (var i = 0; i < els.length; i++) {
 		mixin(els[i], {onfocus: editingLengthFocus, oninput: editingLengthChange});
 	}
-	els = qsa('[name$="[type]"]');
+	els = qsa($box_id+'[name$="[type]"]');
 	for (var i = 0; i < els.length; i++) {
 		mixin(els[i], {
 			onfocus: function () { lastType = selectValue(this); },
@@ -231,6 +233,10 @@ function editFields() {
 			onmouseover: function (event) { helpMouseover.call(this, event, getTarget(event).value, 1) },
 			onmouseout: helpMouseout
 		});
+	}
+
+	if (box_id) {
+		resetDisplayStyle(box_id);
 	}
 }
 

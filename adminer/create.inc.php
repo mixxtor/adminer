@@ -22,6 +22,34 @@ if ($TABLE != "") {
 }
 
 $row = $_POST;
+// support of inline move/add/drop fields
+if ($_POST) {
+	// auto fill $fields
+	$orig_structure = get_table_structure($TABLE);
+	$named_fields_list = array();
+	$post_fields_list = array();
+	foreach ($orig_structure["fields"] as $k => &$field) {
+		$field["orig"] = $field["field"];
+		$post_fields_list[$k+1] = $field;						// emulate $_POST, where indexes start from 1
+		$named_fields_list[$field["orig"]] = $field;
+	}
+	unset($field);
+
+	if (empty($row["name"])) {
+		$row = $orig_structure;
+		$row["fields"] = $post_fields_list;
+	}
+	else if (empty($row["fields"])) {
+		$row["fields"] = $post_fields_list;
+	}
+	else {
+		foreach ($row["fields"] as &$post_field)
+			if ((count($post_field) == 2) && !empty($post_field["orig"]) && isset($post_field["field"]))
+				$post_field = $named_fields_list[ $post_field["orig"] ];
+		unset($post_field);
+	}
+}
+//
 $row["fields"] = (array) $row["fields"];
 if ($row["auto_increment_col"]) {
 	$row["fields"][$row["auto_increment_col"]]["auto_increment"] = true;
@@ -114,14 +142,19 @@ if ($_POST && !process_fields($row["fields"]) && !$error) {
 			($row["Engine"] && $row["Engine"] != $table_status["Engine"] ? $row["Engine"] : ""),
 			($row["Collation"] && $row["Collation"] != $table_status["Collation"] ? $row["Collation"] : ""),
 			($row["Auto_increment"] != "" ? number($row["Auto_increment"]) : ""),
-			$partitioning
+			$partitioning,
+			($row["Row_format"] && $row["Row_format"] != $table_status["Row_format"] ? $row["Row_format"] : ""),
+			($row["Create_options"] && $row["Create_options"] != $table_status["Create_options"] ? $row["Create_options"] : "")
 		));
 	}
 }
 
 page_header(($TABLE != "" ? lang('Alter table') : lang('Create table')), $error, array("table" => $TABLE), h($TABLE));
+if ($table_status)
+	$adminer->selectLinks($table_status);
 
 if (!$_POST) {
+/*
 	$row = array(
 		"Engine" => $_COOKIE["adminer_engine"],
 		"fields" => array(array("field" => "", "type" => (isset($types["int"]) ? "int" : (isset($types["integer"]) ? "integer" : "")), "on_update" => "")),
@@ -150,14 +183,25 @@ if (!$_POST) {
 			$row["partition_values"] = array_values($partitions);
 		}
 	}
+*/
+	$row = get_table_structure($TABLE);
 }
 
 $collations = collations();
+$collations_name = "";
 $engines = engines();
 // case of engine may differ
 foreach ($engines as $engine) {
 	if (!strcasecmp($engine, $row["Engine"])) {
 		$row["Engine"] = $engine;
+		break;
+	}
+}
+
+$row_formats = row_formats();
+foreach ($row_formats as $row_format) {
+	if (!strcasecmp($row_format, $row["Row_format"])) {
+		$row["Row_format"] = $row_format;
 		break;
 	}
 }
@@ -169,25 +213,39 @@ foreach ($engines as $engine) {
 <?php echo lang('Table name'); ?>: <input name="name" data-maxlength="64" value="<?php echo h($row["name"]); ?>" autocapitalize="off">
 <?php if ($TABLE == "" && !$_POST) { echo script("focus(qs('#form')['name']);"); } ?>
 <?php echo ($engines ? "<select name='Engine'>" . optionlist(array("" => "(" . lang('engine') . ")") + $engines, $row["Engine"]) . "</select>" . on_help("getTarget(event).value", 1) . script("qsl('select').onchange = helpClose;") : ""); ?>
- <?php echo ($collations && !preg_match("~sqlite|mssql~", $jush) ? html_select("Collation", array("" => "(" . lang('collation') . ")") + $collations, $row["Collation"]) : ""); ?>
+ <?php echo ($collations && !preg_match("~sqlite|mssql~", $jush) ? html_select($collations_name = "Collation", array("" => "(" . lang('collation') . ")") + $collations, $row["Collation"]) : ""); ?>
  <input type="submit" value="<?php echo lang('Save'); ?>">
 <?php } ?>
 
 <?php if (support("columns")) { ?>
 <div class="scrollable">
-<table cellspacing="0" id="edit-fields" class="nowrap">
+<table cellspacing="0" id="edit-fields" class="nowrap" style="display:none;">
 <?php
-edit_fields($row["fields"], $collations, "TABLE", $foreign_keys);
+$comments = ($_POST ? $_POST["comments"] : adminer_setting("comments"));
+$defaults = ($_POST ? $_POST["defaults"] : adminer_setting("defaults"));
+$quick_edit = ($_POST ? $_POST["up"] || $_POST["down"] || $_POST["add"] || $_POST["drop_col"] : false);
+if ($quick_edit || (!$_POST && (!$comments || !$defaults))) {
+	foreach ($row["fields"] as $field) {
+		if (!$comments && ($field["comment"] != "")) {
+			$comments = true;
+		}
+		if (!$defaults && ($field["default"] != "")) {
+			$defaults = true;
+		}
+	}
+}
+if ($collations_name && empty($_GET["nojs"]))
+	edit_fields($row["fields"], $collations_name, "TABLE", $foreign_keys);
+else
+	edit_fields($row["fields"], $collations, "TABLE", $foreign_keys);
 ?>
 </table>
-<?php echo script("editFields();"); ?>
+<?php echo script("editFields('edit-fields');"); ?>
 </div>
 <p>
 <?php echo lang('Auto Increment'); ?>: <input type="number" name="Auto_increment" size="6" value="<?php echo h($row["Auto_increment"]); ?>">
-<?php echo checkbox("defaults", 1, ($_POST ? $_POST["defaults"] : adminer_setting("defaults")), lang('Default values'), "columnShow(this.checked, 5)", "jsonly"); ?>
-<?php
-$comments = ($_POST ? $_POST["comments"] : adminer_setting("comments"));
-echo (support("comment")
+<?php echo checkbox("defaults", 1, $defaults, lang('Default values'), "columnShow(this.checked, 5)", "jsonly"); ?>
+<?php echo (support("comment")
 	? checkbox("comments", 1, $comments, lang('Comment'), "editingCommentsClick(this, true);", "jsonly")
 		. ' ' . (preg_match('~\n~', $row["Comment"])
 			? "<textarea name='Comment' rows='2' cols='20'" . ($comments ? "" : " class='hidden'") . ">" . h($row["Comment"]) . "</textarea>"
@@ -196,6 +254,12 @@ echo (support("comment")
 	: '')
 ;
 ?>
+<?php if ($row_formats && support("row_format")) { ?>
+<p>
+<?php echo lang('Row Format'); ?>:
+<?php echo "<select name='Row_format'>" . optionlist(array("" => "(" . lang('default') . ")") + $row_formats, $row["Row_format"]) . "</select>" . on_help("getTarget(event).value", 1) . script("qsl('select').onchange = helpClose;"); ?>
+<?php echo lang('Options'); ?>: <input name="Create_options" data-maxlength="64" value="<?php echo h($row["Create_options"]); ?>" autocapitalize="off">
+<?php } ?>
 <p>
 <input type="submit" value="<?php echo lang('Save'); ?>">
 <?php } ?>

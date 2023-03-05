@@ -23,7 +23,7 @@ function page_header($title, $error = "", $breadcrumb = array(), $title2 = "") {
 <title><?php echo $title_page; ?></title>
 <link rel="stylesheet" type="text/css" href="../adminer/static/default.css">
 <?php echo script_src("../adminer/static/functions.js"); ?>
-<?php echo script_src("static/editing.js"); ?>
+<?php echo script_src("../adminer/static/editing.js"); ?>
 <?php if ($adminer->head()) { ?>
 <link rel="shortcut icon" type="image/x-icon" href="../adminer/static/favicon.ico">
 <link rel="apple-touch-icon" href="../adminer/static/favicon.ico">
@@ -64,11 +64,13 @@ var thousandsSeparator = '<?php echo js_escape(lang(',')); ?>';
 <div id="help" class="jush-<?php echo $jush; ?> jsonly hidden"></div>
 <?php echo script("mixin(qs('#help'), {onmouseover: function () { helpOpen = 1; }, onmouseout: helpMouseout});"); ?>
 
+<div id="content_scroll_box">
 <div id="content">
 <?php
 	if ($breadcrumb !== null) {
-		$link = substr(preg_replace('~\b(username|db|ns)=[^&]*&~', '', ME), 0, -1);
-		echo '<p id="breadcrumb"><a href="' . h($link ? $link : ".") . '">' . $drivers[DRIVER] . '</a> &raquo; ';
+		//$link = substr(preg_replace('~\b(username|db|ns)=[^&]*&~', '', ME), 0, -1);
+		//echo '<p id="breadcrumb"><a href="' . h($link ? $link : ".") . '">' . $drivers[DRIVER] . '</a> &raquo; ';
+		echo '<p id="breadcrumb">' . $drivers[DRIVER] . ' &raquo; ';
 		$link = substr(preg_replace('~\b(db|ns)=[^&]*&~', '', ME), 0, -1);
 		$server = $adminer->serverName(SERVER);
 		$server = ($server != "" ? $server : lang('Server'));
@@ -176,7 +178,8 @@ function page_messages($error) {
 function page_footer($missing = "") {
 	global $adminer, $token;
 	?>
-</div>
+</div>	<!-- end of content -->
+</div>	<!-- end of content_scroll_box -->
 
 <?php switch_lang(); ?>
 <?php if ($missing != "auth") { ?>

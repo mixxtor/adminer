@@ -17,6 +17,21 @@ if ($jush == "mongo") { // doesn't support primary key
 }
 $row = $_POST;
 
+// auto fill for quick edit form data
+if ($_POST && !$error) {
+	foreach ($row["indexes"] as &$index) {
+		$name = $index["name"];
+		if (in_array($index["type"], $index_types)) {
+			if (is_null($index["columns"]) && is_null($index["lengths"]) && is_null($index["descs"])) {
+				$index["columns"] = $indexes[$name]["columns"];
+				$index["lengths"] = $indexes[$name]["lengths"];
+				$index["descs"] = $indexes[$name]["descs"];
+			}
+		}
+	}
+	unset($index);
+}
+
 if ($_POST && !$error && !$_POST["add"] && !$_POST["drop_col"]) {
 	$alter = array();
 	foreach ($row["indexes"] as $index) {

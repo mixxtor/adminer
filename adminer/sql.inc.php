@@ -2,7 +2,11 @@
 if (!$error && $_POST["export"]) {
 	dump_headers("sql");
 	$adminer->dumpTable("", "");
-	$adminer->dumpData("", "table", $_POST["query"]);
+
+	$export_style = "table";
+	if (!empty($_POST["data_style"]))
+		$export_style = $_POST["data_style"];
+	$adminer->dumpData("", $export_style, $_POST["query"]);
 	exit;
 }
 
@@ -14,7 +18,12 @@ if (!$error && $_POST["clear"]) {
 	redirect(remove_from_uri("history"));
 }
 
-page_header((isset($_GET["import"]) ? lang('Import') : lang('SQL command')), $error);
+$TABLE = $_GET["table"];
+$table_status = table_status1($TABLE);
+$table_name = $adminer->tableName($table_status);
+page_header((isset($_GET["import"]) ? lang('Import') : lang('SQL command') . ($table_name ? ": ".$table_name : "")), $error);
+if ($table_name)
+	$adminer->selectLinks($table_status);
 
 if (!$error && $_POST) {
 	$fp = false;
@@ -131,7 +140,7 @@ if (!$error && $_POST) {
 
 								} else {
 									$time = " <span class='time'>(" . format_time($start) . ")</span>"
-										. (strlen($q) < 1000 ? " <a href='" . h(ME) . "sql=" . urlencode(trim($q)) . "'>" . lang('Edit') . "</a>" : "") // 1000 - maximum length of encoded URL in IE is 2083 characters
+										. (strlen($q) < 1000 ? " <a href='" . h(ME) . "sql=" . urlencode(trim($q)) . ($_GET["table"] ? "&table=".$_GET["table"] : "") . "'>" . lang('Edit') . "</a>" : "") // 1000 - maximum length of encoded URL in IE is 2083 characters
 									;
 									$affected = $connection->affected_rows; // getting warnigns overwrites this
 									$warnings = ($_POST["only_errors"] ? "" : $driver->warnings());
@@ -145,6 +154,10 @@ if (!$error && $_POST) {
 										$limit = $_POST["limit"];
 										$orgtables = select($result, $connection2, array(), $limit);
 										if (!$_POST["only_errors"]) {
+										$data_style = array('', 'TRUNCATE+INSERT', 'INSERT');
+										if ($jush == "sql") //! use insertUpdate() in all drivers
+											$data_style[] = 'INSERT+UPDATE';
+
 											echo "<form action='' method='post'>\n";
 											$num_rows = $result->num_rows;
 											echo "<p>" . ($num_rows ? ($limit && $num_rows > $limit ? lang('%d / ', $limit) : "") . lang('%d row(s)', $num_rows) : "");
@@ -156,6 +169,7 @@ if (!$error && $_POST) {
 											echo ", <a href='#$id'>" . lang('Export') . "</a>" . script("qsl('a').onclick = partial(toggle, '$id');", "") . "<span id='$id' class='hidden'>: "
 												. html_select("output", $adminer->dumpOutput(), $adminer_export["output"]) . " "
 												. html_select("format", $dump_format, $adminer_export["format"])
+											. (isset($dump_format["sql"]) ? html_select("data_style", $data_style, "") : "")
 												. "<input type='hidden' name='query' value='" . h($q) . "'>"
 												. " <input type='submit' name='export' value='" . lang('Export') . "'><input type='hidden' name='token' value='$token'></span>\n"
 												. "</form>\n"
@@ -225,7 +239,7 @@ if (!isset($_GET["import"])) {
 	echo script(($_POST ? "" : "qs('textarea').focus();\n") . "qs('#form').onsubmit = partial(sqlSubmit, qs('#form'), '" . js_escape(remove_from_uri("sql|limit|error_stops|only_errors|history")) . "');");
 	echo "<p>$execute\n";
 	echo lang('Limit rows') . ": <input type='number' name='limit' class='size' value='" . h($_POST ? $_POST["limit"] : $_GET["limit"]) . "'>\n";
-	
+
 } else {
 	echo "<fieldset><legend>" . lang('File upload') . "</legend><div>";
 	$gz = (extension_loaded("zlib") ? "[.gz]" : "");

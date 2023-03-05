@@ -4,6 +4,7 @@ $tables_views = array_merge((array) $_POST["tables"], (array) $_POST["views"]);
 if ($tables_views && !$error && !$_POST["search"]) {
 	$result = true;
 	$message = "";
+	$redirect_replace = null;
 	if ($jush == "sql" && $_POST["tables"] && count($_POST["tables"]) > 1 && ($_POST["drop"] || $_POST["truncate"] || $_POST["copy"])) {
 		queries("SET foreign_key_checks = 0"); // allows to truncate or drop several tables at once
 	}
@@ -14,10 +15,12 @@ if ($tables_views && !$error && !$_POST["search"]) {
 		}
 		$message = lang('Tables have been truncated.');
 	} elseif ($_POST["move"]) {
-		$result = move_tables((array) $_POST["tables"], (array) $_POST["views"], $_POST["target"]);
+		$result = move_tables((array) $_POST["tables"], (array) $_POST["views"], $_POST["target"], $_POST["target_table"]);
 		$message = lang('Tables have been moved.');
+		if (((count($_POST["tables"]) + count($_POST["views"])) == 1) && ($_POST["target"] == DB))
+			$redirect_replace = array( "/(&table=)[^&]+/", "\\1".$_POST["target_table"] );
 	} elseif ($_POST["copy"]) {
-		$result = copy_tables((array) $_POST["tables"], (array) $_POST["views"], $_POST["target"]);
+		$result = copy_tables((array) $_POST["tables"], (array) $_POST["views"], $_POST["target"], $_POST["target_table"]);
 		$message = lang('Tables have been copied.');
 	} elseif ($_POST["drop"]) {
 		if ($_POST["views"]) {
@@ -41,10 +44,17 @@ if ($tables_views && !$error && !$_POST["search"]) {
 		}
 	}
 
-	queries_redirect(substr(ME, 0, -1), $message, $result);
+	if (isset($_POST["redirect"]))
+		$redirect = $_POST["redirect"];
+	else
+		$redirect = substr(ME, 0, -1);
+//	queries_redirect(substr(ME, 0, -1), $message, $result);
+	if ($redirect_replace)
+		$redirect = preg_replace($redirect_replace[0], $redirect_replace[1], $redirect);
+	queries_redirect($redirect, $message, $result);
 }
 
-page_header(($_GET["ns"] == "" ? lang('Database') . ": " . h(DB) : lang('Schema') . ": " . h($_GET["ns"])), $error, true);
+page_header(($_GET["ns"] == "" ? lang('Database') : lang('Schema') ), $error, true, $_GET["ns"] == "" ? h(DB) : h($_GET["ns"]));
 
 if ($adminer->homepage()) {
 	if ($_GET["ns"] !== "") {
@@ -66,7 +76,7 @@ if ($adminer->homepage()) {
 				}
 			}
 			echo "<div class='scrollable'>\n";
-			echo "<table cellspacing='0' class='nowrap checkable'>\n";
+			echo "<table cellspacing='0' id='tables-list' style='display:none' class='nowrap checkable'>\n";
 			echo script("mixin(qsl('table'), {onclick: tableClick, ondblclick: partialArg(tableClick, true)});");
 			echo '<thead><tr class="wrap">';
 			echo '<td><input id="check-all" type="checkbox" class="jsonly">' . script("qs('#check-all').onclick = partial(formCheck, /^(tables|views)\[/);", "");
@@ -78,6 +88,9 @@ if ($adminer->homepage()) {
 			echo '<td>' . lang('Data Free') . doc_link(array('sql' => 'show-table-status.html'));
 			echo '<td>' . lang('Auto Increment') . doc_link(array('sql' => 'example-auto-increment.html', 'mariadb' => 'auto_increment/'));
 			echo '<td>' . lang('Rows') . doc_link(array('sql' => 'show-table-status.html', 'pgsql' => 'catalog-pg-class.html#CATALOG-PG-CLASS', 'oracle' => 'REFRN20286'));
+			echo '<td>' . lang('Row Format') . doc_link(array('sql' => 'show-table-status.html'));
+			echo '<td>' . lang('Avg Row Length') . doc_link(array('sql' => 'show-table-status.html'));
+			echo '<td>' . lang('Create Options') . doc_link(array('sql' => 'show-table-status.html'));
 			echo (support("comment") ? '<td>' . lang('Comment') . doc_link(array('sql' => 'show-table-status.html', 'pgsql' => 'functions-info.html#FUNCTIONS-INFO-COMMENT-TABLE')) : '');
 			echo "</thead>\n";
 
@@ -99,6 +112,9 @@ if ($adminer->homepage()) {
 						"Data_free" => array("edit", lang('New item')),
 						"Auto_increment" => array("auto_increment=1&create", lang('Alter table')),
 						"Rows" => array("select", lang('Select data')),
+						"Row_format" => array("create", lang('Alter table')),
+						"Avg_row_length" => array("create", lang('Alter table')),
+						"Create_options" => array("create", lang('Alter table')),
 					) as $key => $link) {
 						$id = " id='$key-" . h($name) . "'";
 						echo ($link ? "<td align='right'>" . (support("table") || $key == "Rows" || (support("indexes") && $key != "Data_length")
@@ -119,6 +135,7 @@ if ($adminer->homepage()) {
 			}
 
 			echo "</table>\n";
+			echo script("resetDisplayStyle('tables-list');");
 			echo "</div>\n";
 			if (!information_schema(DB)) {
 				echo "<div class='footer'><div>\n";

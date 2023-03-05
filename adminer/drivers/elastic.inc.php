@@ -262,7 +262,7 @@ if (isset($_GET["elastic"])) {
 
 	function db_collation($db, $collations) {
 	}
-	
+
 	function engines() {
 		return array();
 	}
@@ -426,7 +426,7 @@ if (isset($_GET["elastic"])) {
 	* @param array
 	* @return mixed
 	*/
-	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
 		global $connection;
 		$properties = array();
 		foreach ($fields as $f) {

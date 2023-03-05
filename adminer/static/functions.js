@@ -250,7 +250,7 @@ function tableClick(event, click) {
 	}
 	click = (click || !window.getSelection || getSelection().isCollapsed);
 	var el = getTarget(event);
-	while (!isTag(el, 'tr')) {
+	while (!isTag(el, 'tr') && !isTag(el, 'th')) {
 		if (isTag(el, 'table|a|input|textarea')) {
 			if (el.type != 'checkbox') {
 				return;
@@ -263,11 +263,13 @@ function tableClick(event, click) {
 			return;
 		}
 	}
-	el = el.firstChild.firstChild;
-	if (click) {
-		el.checked = !el.checked;
-		el.onclick && el.onclick();
-	}
+
+	if (isTag(el, 'tr')) {
+		el = el.firstChild.firstChild;
+		if (click) {
+			el.checked = !el.checked;
+			el.onclick && el.onclick();
+		}
 	if (el.name == 'check[]') {
 		el.form['all'].checked = false;
 		formUncheck('all-page');
@@ -275,7 +277,8 @@ function tableClick(event, click) {
 	if (/^(tables|views)\[\]$/.test(el.name)) {
 		formUncheck('check-all');
 	}
-	trCheck(el);
+		trCheck(el);
+	}
 }
 
 var lastChecked;
@@ -309,6 +312,16 @@ function checkboxClick(event) {
 		}
 	} else {
 		lastChecked = this;
+	}
+}
+
+/** Reset `display` style for element
+* @param string
+*/
+function resetDisplayStyle(id) {
+	var box = document.getElementById(id);
+	if (box.style.display === "none") {
+		box.style.display = "";
 	}
 }
 
@@ -387,7 +400,8 @@ function selectAddRow() {
 	var inputs = qsa('input', row);
 	for (var i=0; i < inputs.length; i++) {
 		inputs[i].name = inputs[i].name.replace(/[a-z]\[\d+/, '$&1');
-		inputs[i].className = '';
+		if (inputs[i].type != "image")
+			inputs[i].className = '';
 		if (inputs[i].type == 'checkbox') {
 			inputs[i].checked = false;
 		} else {
@@ -395,6 +409,34 @@ function selectAddRow() {
 		}
 	}
 	field.parentNode.parentNode.appendChild(row);
+}
+
+function selectSearchRemoveRow(event) {
+	var el = getTarget(event);
+	var search_row = el;
+	while (!search_row.getElementsByTagName('select').length)
+		search_row = search_row.parentNode;
+	var search_rows = search_row.parentNode;
+
+	var selects = search_rows.getElementsByTagName('select');
+	var inputs = search_rows.getElementsByTagName('input');
+
+	if (selects.length > 2) {	// 1 row has 2 selects
+		// remove current row
+		search_rows.removeChild(search_row);
+	} else {
+		// hide search fieldset
+		toggle(search_rows.id);
+
+		// clear values
+		for (var i=0; i < selects.length; i++)
+			selects[i].selectedIndex = 0;
+		for (var i=0; i < inputs.length; i++)
+			inputs[i].value = "";
+	}
+
+	// restore possibility to append searches
+	selects[ selects.length-2 ].onchange = selectAddRow;
 }
 
 /** Prevent onsearch handler on Enter
@@ -545,6 +587,14 @@ function editingKeydown(event) {
 function functionChange() {
 	var input = this.form[this.name.replace(/^function/, 'fields')];
 	if (input) { // undefined with the set data type
+		if (input.length > 1) {	// cell has hidden field with same name (file input + hidden)
+			for (i=input.length-1; i>=0; i--) {
+				if (input[i].type != "hidden") {
+					input = input[ i ];
+					break;
+				}
+			}
+		}
 		if (selectValue(this)) {
 			if (input.origType === undefined) {
 				input.origType = input.type;
@@ -662,7 +712,7 @@ function ajaxForm(form, message, button) {
 		}
 	}
 	data = data.join('&');
-	
+
 	var url = form.action;
 	if (!/post/i.test(form.method)) {
 		url = url.replace(/\?.*/, '') + '?' + data;
@@ -891,7 +941,7 @@ function focus(el) {
 */
 function cloneNode(el) {
 	var el2 = el.cloneNode(true);
-	var selector = 'input, select';
+	var selector = 'input, select, button';
 	var origEls = qsa(selector, el);
 	var cloneEls = qsa(selector, el2);
 	for (var i=0; i < origEls.length; i++) {

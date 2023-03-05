@@ -87,7 +87,10 @@ if ($_POST && !$error) {
 			}
 			$query = implode(" UNION ALL ", $union);
 		}
-		$adminer->dumpData($TABLE, "table", $query);
+		$export_style = "table";
+		if (!empty($_POST["data_style"]))
+			$export_style = $_POST["data_style"];
+		$adminer->dumpData($TABLE, $export_style, $query);
 		exit;
 	}
 
@@ -226,7 +229,7 @@ $set = null;
 if (isset($rights["insert"]) || !support("table")) {
 	$set = "";
 	foreach ((array) $_GET["where"] as $val) {
-		if ($foreign_keys[$val["col"]] && count($foreign_keys[$val["col"]]) == 1 && ($val["op"] == "="
+		if (isset($foreign_keys[$val["col"]]) && count($foreign_keys[$val["col"]]) == 1 && ($val["op"] == "="
 			|| (!$val["op"] && !preg_match('~[_%]~', $val["val"])) // LIKE in Editor
 		)) {
 			$set .= "&set" . urlencode("[" . bracket_escape($val["col"]) . "]") . "=" . urlencode($val["val"]);
@@ -430,7 +433,7 @@ if (!$columns && support("table")) {
 								$link .= where_link($i++, $k, $v);
 							}
 						}
-						
+
 						$val = select_value($val, $link, $field, $text_length);
 						$id = h("val[$unique_idf][" . bracket_escape($key) . "]");
 						$value = $_POST["val"][$unique_idf][bracket_escape($key)];
@@ -491,7 +494,7 @@ if (!$columns && support("table")) {
 					echo "\n";
 				}
 			}
-			
+
 			echo "<div class='footer'><div>\n";
 			if ($rows || $page) {
 				if ($pagination) {
@@ -523,7 +526,7 @@ if (!$columns && support("table")) {
 					}
 					echo "</fieldset>\n";
 				}
-				
+
 				echo "<fieldset>";
 				echo "<legend>" . lang('Whole result') . "</legend>";
 				$display_rows = ($exact_count ? "" : "~ ") . $found_rows;
@@ -551,10 +554,16 @@ if (!$columns && support("table")) {
 					}
 				}
 				if ($format) {
+				$data_style = array('', 'TRUNCATE+INSERT', 'INSERT', 'INSERT-AI');
+				if ($jush == "sql") //! use insertUpdate() in all drivers
+					$data_style[] = 'INSERT+UPDATE';
+
 					print_fieldset("export", lang('Export') . " <span id='selected2'></span>");
 					$output = $adminer->dumpOutput();
 					echo ($output ? html_select("output", $output, $adminer_import["output"]) . " " : "");
 					echo html_select("format", $format, $adminer_import["format"]);
+				if (isset($format["sql"]))
+					echo html_select("data_style", $data_style, "");
 					echo " <input type='submit' name='export' value='" . lang('Export') . "'>\n";
 					echo "</div></fieldset>\n";
 				}

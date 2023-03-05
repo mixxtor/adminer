@@ -236,7 +236,7 @@ if (isset($_GET["simpledb"])) {
 		function rollback() {
 			return false;
 		}
-		
+
 		function slowQuery($query, $timeout) {
 			$this->_conn->timeout = $timeout;
 			return $query;
@@ -364,7 +364,7 @@ if (isset($_GET["simpledb"])) {
 		return array();
 	}
 
-	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
 		return ($table == "" && sdb_request('CreateDomain', array('DomainName' => $name)));
 	}
 

@@ -78,7 +78,10 @@ function select($result, $connection2 = null, $orgtables = array(), $limit = 0) 
 			if ($val === null) {
 				$val = "<i>NULL</i>";
 			} elseif ($blobs[$key] && !is_utf8($val)) {
-				$val = "<i>" . lang('%d byte(s)', strlen($val)) . "</i>"; //! link to download
+				if (strlen($val) > 16)
+					$val = "<i>" . lang('%d byte(s)', strlen($val)) . "</i>"; //! link to download
+				else
+					$val = "<code>" . bin2hex($val) . "</code>"; // usefull for UUID
 			} else {
 				$val = h($val);
 				if ($types[$key] == 254) { // 254 - char
@@ -101,10 +104,12 @@ function select($result, $connection2 = null, $orgtables = array(), $limit = 0) 
 */
 function referencable_primary($self) {
 	$return = array(); // table_name => field
-	foreach (table_status('', true) as $table_name => $table) {
-		if ($table_name != $self && fk_support($table)) {
-			foreach (fields($table_name) as $field) {
-				if ($field["primary"]) {
+	if (function_exists("db_pk_fields")) {
+		// faster method - (mysql execute only two queries)
+		$tables_list = table_status('', true);
+		foreach (db_pk_fields(DB) as $table_name => $fields_list) {
+			if ($table_name != $self && fk_support($tables_list[$table_name])) {
+				foreach ($fields_list as $field) {
 					if ($return[$table_name]) { // multi column primary key
 						unset($return[$table_name]);
 						break;
@@ -113,7 +118,23 @@ function referencable_primary($self) {
 				}
 			}
 		}
+	} else {
+		// Too slow when DB has many tables (too many queries)
+		foreach (table_status('', true) as $table_name => $table) {
+			if ($table_name != $self && fk_support($table)) {
+				foreach (fields($table_name) as $field) {
+					if ($field["primary"]) {
+						if ($return[$table_name]) { // multi column primary key
+							unset($return[$table_name]);
+							break;
+						}
+						$return[$table_name] = $field;
+					}
+				}
+			}
+		}
 	}
+
 	return $return;
 }
 
@@ -165,7 +186,7 @@ function textarea($name, $value, $rows = 10, $cols = 80) {
 /** Print table columns for type edit
 * @param string
 * @param array
-* @param array
+* @param array or string if collations already exists on the page in element with this name
 * @param array returned by referencable_primary()
 * @param array extra types to prepend
 * @return null
@@ -183,7 +204,14 @@ if ($foreign_keys) {
 }
 echo optionlist(array_merge($extra_types, $structured_types), $type);
 ?></select><td><input name="<?php echo h($key); ?>[length]" value="<?php echo h($field["length"]); ?>" size="3"<?php echo (!$field["length"] && preg_match('~var(char|binary)$~', $type) ? " class='required'" : ""); //! type="number" with enabled JavaScript ?> aria-labelledby="label-length"><td class="options"><?php
-	echo "<select name='" . h($key) . "[collation]'" . (preg_match('~(char|text|enum|set)$~', $type) ? "" : " class='hidden'") . '><option value="">(' . lang('collation') . ')' . optionlist($collations, $field["collation"]) . '</select>';
+	echo "<select name='" . h($key) . "[collation]'" . (preg_match('~(char|text|enum|set)$~', $type) ? "" : " class='hidden'") . '>';
+	if (is_array($collations)) {
+		echo '<option value="">(' . lang('collation') . ')' . optionlist($collations, $field["collation"]);
+	}
+	echo '</select>';
+	if (is_string($collations)) {
+		echo "<script".nonce().">document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ var row_coll = document.getElementsByName('" . h($key) . "[collation]')[0]; row_coll.innerHTML = document.getElementsByName('".$collations."')[0].innerHTML; row_coll.setAttribute('value', '".$field["collation"]."'); }, 10); });</script>";
+	}
 	echo ($unsigned ? "<select name='" . h($key) . "[unsigned]'" . (!$type || preg_match(number_type(), $type) ? "" : " class='hidden'") . '><option>' . optionlist($unsigned, $field["unsigned"]) . '</select>' : '');
 	echo (isset($field['on_update']) ? "<select name='" . h($key) . "[on_update]'" . (preg_match('~timestamp|datetime~', $type) ? "" : " class='hidden'") . '>' . optionlist(array("" => "(" . lang('ON UPDATE') . ")", "CURRENT_TIMESTAMP"), (preg_match('~^CURRENT_TIMESTAMP~i', $field["on_update"]) ? "CURRENT_TIMESTAMP" : $field["on_update"])) . '</select>' : '');
 	echo ($foreign_keys ? "<select name='" . h($key) . "[on_delete]'" . (preg_match("~`~", $type) ? "" : " class='hidden'") . "><option value=''>(" . lang('ON DELETE') . ")" . optionlist(explode("|", $on_actions), $field["on_delete"]) . "</select> " : " "); // space for IE
@@ -302,6 +330,7 @@ function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = arra
 <tr<?php echo ($display ? "" : " style='display: none;'"); ?>>
 <?php echo ($type == "PROCEDURE" ? "<td>" . html_select("fields[$i][inout]", explode("|", $inout), $field["inout"]) : ""); ?>
 <th><?php if ($display) { ?><input name="fields[<?php echo $i; ?>][field]" value="<?php echo h($field["field"]); ?>" data-maxlength="64" autocapitalize="off" aria-labelledby="label-name"><?php } ?>
+<?php if ($display && !$field) { print script("qsl('input').ignoreDefaultValue = true;"); } ?>
 <input type="hidden" name="fields[<?php echo $i; ?>][orig]" value="<?php echo h($orig); ?>"><?php edit_type("fields[$i]", $field, $collations, $foreign_keys); ?>
 <?php if ($type == "TABLE") { ?>
 <td><?php echo checkbox("fields[$i][null]", 1, $field["null"], "", "", "block", "label-null"); ?>
@@ -317,6 +346,43 @@ function edit_fields($fields, $collations, $type = "TABLE", $foreign_keys = arra
 		: "");
 		echo ($orig == "" || support("drop_col") ? "<input type='image' class='icon' name='drop_col[$i]' src='../adminer/static/cross.gif' alt='x' title='" . lang('Remove') . "'>" : "");
 	}
+}
+
+function get_table_structure($TABLE) {
+	global $types, $connection;
+
+	$tbl = array(
+		"Engine" => $_COOKIE["adminer_engine"],
+		"fields" => array(array("field" => "", "type" => (isset($types["int"]) ? "int" : (isset($types["integer"]) ? "integer" : "")))),
+		"partition_names" => array(""),
+	);
+
+	if ($TABLE != "") {
+//		$tbl = $table_status;
+		$tbl = table_status($TABLE);
+		$tbl["name"] = $TABLE;
+		$tbl["fields"] = array();
+		if (!$_GET["auto_increment"]) { // don't prefill by original Auto_increment for the sake of performance and not reusing deleted ids
+			$tbl["Auto_increment"] = "";
+		}
+		$orig_fields = fields($TABLE);
+		foreach ($orig_fields as $field) {
+			$field["has_default"] = isset($field["default"]);
+			$tbl["fields"][] = $field;
+		}
+
+		if (support("partitioning")) {
+			$from = "FROM information_schema.PARTITIONS WHERE TABLE_SCHEMA = " . q(DB) . " AND TABLE_NAME = " . q($TABLE);
+			$result = $connection->query("SELECT PARTITION_METHOD, PARTITION_ORDINAL_POSITION, PARTITION_EXPRESSION $from ORDER BY PARTITION_ORDINAL_POSITION DESC LIMIT 1");
+			list($tbl["partition_by"], $tbl["partitions"], $tbl["partition"]) = $result->fetch_row();
+			$partitions = get_key_vals("SELECT PARTITION_NAME, PARTITION_DESCRIPTION $from AND PARTITION_NAME != '' ORDER BY PARTITION_ORDINAL_POSITION");
+			$partitions[""] = "";
+			$tbl["partition_names"] = array_keys($partitions);
+			$tbl["partition_values"] = array_values($partitions);
+		}
+	}
+
+	return $tbl;
 }
 
 /** Move fields up and down or add field

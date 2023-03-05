@@ -491,7 +491,7 @@ ORDER BY connamespace, conname") as $row) {
 		return "";
 	}
 
-	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning) {
+	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning, $row_format, $options) {
 		$alter = array();
 		$queries = array();
 		if ($table != "" && $table != $name) {

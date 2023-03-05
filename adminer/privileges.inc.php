@@ -1,5 +1,9 @@
 <?php
-page_header(lang('Privileges'));
+page_header(lang('Privileges'), "", array(), h(DB . ($_GET["ns"] ? ".$_GET[ns]" : "")));
+if (DB)
+	$adminer->homepage();
+else
+	$adminer->startLinks();
 
 echo '<p class="links"><a href="' . h(ME) . 'user=">' . lang('Create user') . "</a>";
 
